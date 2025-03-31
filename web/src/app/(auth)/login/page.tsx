@@ -36,7 +36,7 @@ export default function LoginPage() {
       }
 
       const data = await response.json();
-      localStorage.setItem('token', data.token);
+      localStorage.setItem('token', data.data?.token);
       toast.success('登录成功');
       router.push('/dashboard');
     } catch (error) {

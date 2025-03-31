@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -10,8 +10,6 @@ import {
   Users,
   Briefcase,
   Settings,
-  Menu,
-  X,
   LogOut,
   User,
   ChevronDown,
@@ -23,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { request } from '@/lib/api';
 
 const menuItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: '仪表盘' },
@@ -31,14 +30,41 @@ const menuItems = [
   { href: '/settings', icon: Settings, label: '系统设置' },
 ];
 
+interface UserProfile {
+  id: number;
+  username: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  avatar: string | null;
+  role: string;
+  status: string;
+  lastLoginAt: string | null;
+  createdAt: string;
+}
+
 export default function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const pathname = usePathname();
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await request('/api/user/profile');
+        setUserProfile(response as UserProfile);
+      } catch (error) {
+        console.error('获取用户信息失败:', error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -58,12 +84,12 @@ export default function MainLayout({
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2 hover:bg-accent/50">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/avatars/01.png" alt="用户头像" />
+                    <AvatarImage src={userProfile?.avatar || ''} alt="用户头像" />
                     <AvatarFallback>
                       <User className="h-4 w-4" />
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-sm">张三</span>
+                  <span className="text-sm">{userProfile?.name || '加载中...'}</span>
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>

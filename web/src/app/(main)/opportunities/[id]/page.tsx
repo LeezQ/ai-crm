@@ -19,33 +19,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Timeline, TimelineItem } from '@/components/ui/timeline';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
-
-interface Opportunity {
-  id: string;
-  customerName: string;
-  contactPerson: string;
-  contactPhone: string;
-  contactEmail: string;
-  expectedAmount: number;
-  status: 'new' | 'following' | 'proposal' | 'negotiation' | 'closed' | 'failed';
-  priority: 'high' | 'medium' | 'low';
-  owner: string;
-  createTime: string;
-  description: string;
-  source: string;
-  expectedCloseDate: string;
-  team: string;
-}
-
-interface FollowUpRecord {
-  id: string;
-  type: 'call' | 'meeting' | 'email' | 'other';
-  content: string;
-  result: string;
-  nextPlan: string;
-  createTime: string;
-  creator: string;
-}
+import { api } from "@/lib/api";
+import { Opportunity, FollowUpRecord } from "@/types/opportunity";
 
 export default function OpportunityDetailPage() {
   const params = useParams();
@@ -66,9 +41,8 @@ export default function OpportunityDetailPage() {
 
   const fetchOpportunityDetail = async () => {
     try {
-      const response = await fetch(`/api/opportunities/${params.id}`);
-      const data = await response.json();
-      setOpportunity(data);
+      const response = await api.opportunities.get(params.id as string);
+      setOpportunity(response);
     } catch (error) {
       console.error('获取商机详情失败:', error);
     } finally {
@@ -78,9 +52,8 @@ export default function OpportunityDetailPage() {
 
   const fetchFollowUpRecords = async () => {
     try {
-      const response = await fetch(`/api/opportunities/${params.id}/follow-ups`);
-      const data = await response.json();
-      setFollowUpRecords(data);
+      const response = await api.opportunities.followUps.list(params.id as string);
+      setFollowUpRecords(response);
     } catch (error) {
       console.error('获取跟进记录失败:', error);
     }
@@ -89,40 +62,28 @@ export default function OpportunityDetailPage() {
   const handleStatusChange = async (newStatus: string) => {
     if (!opportunity) return;
     try {
-      await fetch(`/api/opportunities/${params.id}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
+      await api.opportunities.updateStatus(params.id as string, { status: newStatus as Opportunity['status'] });
       setOpportunity({ ...opportunity, status: newStatus as Opportunity['status'] });
     } catch (error) {
       console.error('更新状态失败:', error);
     }
   };
 
-  const handleAddFollowUp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreateFollowUp = async () => {
     try {
-      const response = await fetch(`/api/opportunities/${params.id}/follow-ups`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newFollowUp),
+      const response = await api.opportunities.followUps.create(
+        params.id as string,
+        newFollowUp
+      );
+      setFollowUpRecords([...followUpRecords, response]);
+      setNewFollowUp({
+        type: 'call',
+        content: '',
+        result: '',
+        nextPlan: '',
       });
-      if (response.ok) {
-        fetchFollowUpRecords();
-        setNewFollowUp({
-          type: 'call',
-          content: '',
-          result: '',
-          nextPlan: '',
-        });
-      }
     } catch (error) {
-      console.error('添加跟进记录失败:', error);
+      console.error('创建跟进记录失败:', error);
     }
   };
 
@@ -191,7 +152,7 @@ export default function OpportunityDetailPage() {
             </TabsContent>
             <TabsContent value="follow-up">
               <div className="space-y-6">
-                <form onSubmit={handleAddFollowUp} className="space-y-4">
+                <form onSubmit={handleCreateFollowUp} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>跟进类型</Label>

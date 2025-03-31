@@ -1,13 +1,12 @@
-import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { followUps, users } from "@/db/schema";
+import { Context } from "hono";
+import { db } from "../utils/db";
+import { followUps, users } from "../db/schema";
 import { eq } from "drizzle-orm";
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export const getFollowUps = async (c: Context) => {
   try {
+    const id = c.req.param("id");
+
     const followUpRecords = await db
       .select({
         id: followUps.id,
@@ -20,32 +19,29 @@ export async function GET(
       })
       .from(followUps)
       .leftJoin(users, eq(followUps.creatorId, users.id))
-      .where(eq(followUps.opportunityId, parseInt(params.id)))
+      .where(eq(followUps.opportunityId, parseInt(id)))
       .orderBy(followUps.createdAt);
 
-    return NextResponse.json(followUpRecords);
+    return c.json(followUpRecords);
   } catch (error) {
-    console.error("获取跟进记录失败:", error);
-    return NextResponse.json({ error: "获取跟进记录失败" }, { status: 500 });
+    return c.json({ error: "获取跟进记录失败" }, 500);
   }
-}
+};
 
-export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export const createFollowUp = async (c: Context) => {
   try {
-    const data = await request.json();
+    const id = c.req.param("id");
+    const data = await c.req.json();
 
     const [newFollowUp] = await db
       .insert(followUps)
       .values({
-        opportunityId: parseInt(params.id),
+        opportunityId: parseInt(id),
         type: data.type,
         content: data.content,
         result: data.result,
         nextPlan: data.nextPlan,
-        creatorId: data.creatorId, // 需要从会话中获取当前用户ID
+        creatorId: c.get("user").id,
       })
       .returning({
         id: followUps.id,
@@ -56,9 +52,8 @@ export async function POST(
         createTime: followUps.createdAt,
       });
 
-    return NextResponse.json(newFollowUp);
+    return c.json(newFollowUp);
   } catch (error) {
-    console.error("创建跟进记录失败:", error);
-    return NextResponse.json({ error: "创建跟进记录失败" }, { status: 500 });
+    return c.json({ error: "创建跟进记录失败" }, 500);
   }
-}
+};

@@ -1,9 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import dayjs from 'dayjs';
-import 'dayjs/locale/zh-cn';
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
+import { Opportunity } from "@/types/opportunity";
 import {
   Table,
   TableBody,
@@ -23,68 +22,50 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Search, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Search, Download, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-
-interface Opportunity {
-  id: number;
-  companyName: string;
-  website: string;
-  contactPerson: string;
-  contactPhone: string;
-  contactWechat: string;
-  contactDepartment: string;
-  contactPosition: string;
-  companySize: string;
-  region: string;
-  industry: string;
-  progress: string;
-  status: string;
-  description: string;
-  ownerId: number;
-  teamId: number;
-  expectedAmount: string;
-  priority: string;
-  source: string;
-  expectedCloseDate: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface PaginationData {
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
 
 interface OpportunitiesResponse {
   items: Opportunity[];
-  pagination: PaginationData;
+  pagination: {
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  };
 }
 
-const fetchOpportunities = async (page: number, pageSize: number): Promise<OpportunitiesResponse> => {
-  const response = await fetch(`/api/opportunities?page=${page}&pageSize=${pageSize}`);
-  if (!response.ok) {
-    throw new Error('获取商机列表失败');
-  }
-  return response.json();
-};
-
 export default function OpportunitiesPage() {
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [total, setTotal] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['opportunities', currentPage, pageSize],
-    queryFn: () => fetchOpportunities(currentPage, pageSize),
-  });
+  useEffect(() => {
+    fetchOpportunities();
+  }, [page, pageSize]);
 
-  const opportunities = data?.items || [];
-  const pagination = data?.pagination;
+  const fetchOpportunities = async () => {
+    try {
+      setLoading(true);
+      const response = await api.opportunities.list({
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+      });
+      setOpportunities(response.items);
+      setTotal(response.pagination.total);
+    } catch (error) {
+      setError("获取商机列表失败");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
@@ -116,28 +97,33 @@ export default function OpportunitiesPage() {
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  const formatDate = (date: string) => {
-    return dayjs(date).locale('zh-cn').format('YYYY-MM-DD');
-  };
+  if (loading) {
+    return (
+      <div className="">
+        <Card>
+          <CardContent className="flex items-center justify-center h-[400px]">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-  const formatDateTime = (date: string) => {
-    return dayjs(date).locale('zh-cn').format('YYYY-MM-DD HH:mm');
-  };
-
-  if (isLoading) return <div>加载中...</div>;
-  if (error) return <div>加载失败</div>;
+  if (error) {
+    return <div>{error}</div>;
+  }
 
   return (
-    <div className="container mx-auto py-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>商机管理</CardTitle>
+    <div className="">
+      <div className="bg-white">
+        <div className="flex flex-row items-center justify-between mb-6">
+          <h2 className="text-2xl font-semibold">商机管理</h2>
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             新建商机
           </Button>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div>
           <div className="flex gap-4 mb-6">
             <div className="flex-1">
               <Input
@@ -219,9 +205,9 @@ export default function OpportunitiesPage() {
                   <TableCell>¥{parseFloat(opp.expectedAmount).toLocaleString()}</TableCell>
                   <TableCell>{getPriorityBadge(opp.priority)}</TableCell>
                   <TableCell>{opp.source}</TableCell>
-                  <TableCell>{opp.expectedCloseDate ? formatDate(opp.expectedCloseDate) : '-'}</TableCell>
-                  <TableCell>{formatDateTime(opp.createdAt)}</TableCell>
-                  <TableCell>{formatDateTime(opp.updatedAt)}</TableCell>
+                  <TableCell>{opp.expectedCloseDate ? opp.expectedCloseDate : '-'}</TableCell>
+                  <TableCell>{opp.createdAt}</TableCell>
+                  <TableCell>{opp.updatedAt}</TableCell>
                   <TableCell>
                     <Button variant="ghost" size="sm" asChild>
                       <Link href={`/opportunities/${opp.id}`}>查看</Link>
@@ -232,35 +218,33 @@ export default function OpportunitiesPage() {
             </TableBody>
           </Table>
 
-          {pagination && (
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-gray-500">
-                共 {pagination.total} 条记录，第 {pagination.page} / {pagination.totalPages} 页
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  上一页
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(page => Math.min(pagination.totalPages, page + 1))}
-                  disabled={currentPage === pagination.totalPages}
-                >
-                  下一页
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
+          <div className="flex items-center justify-between mt-4">
+            <div className="text-sm text-gray-500">
+              共 {total} 条记录，第 {page} / {Math.ceil(total / pageSize)} 页
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                上一页
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.min(Math.ceil(total / pageSize), p + 1))}
+                disabled={page >= Math.ceil(total / pageSize)}
+              >
+                下一页
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
