@@ -1,10 +1,17 @@
+import "dotenv/config";
 import { serve } from "@hono/node-server";
 import console from "console";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { jwt } from "hono/jwt";
 import { routes } from "./routes";
-const app = new Hono();
+import { logger } from "hono/logger";
+import { verifyToken, User } from "./utils/jwt";
+
+const app = new Hono<{
+  Variables: {
+    user: User;
+  };
+}>();
 
 app.use(
   "*",
@@ -13,12 +20,28 @@ app.use(
   })
 );
 
-// app.use(
-//   "*",
-//   jwt({
-//     secret: process.env.JWT_SECRET || "your-secret-key",
-//   })
-// );
+app.use(logger());
+
+// JWT 中间件
+app.use("*", async (c, next) => {
+  const authHeader = c.req.header("Authorization");
+  if (!authHeader) {
+    return c.json({ error: "未提供认证信息" }, 401);
+  }
+
+  const token = authHeader.split(" ")[1];
+  if (!token) {
+    return c.json({ error: "无效的认证信息" }, 401);
+  }
+
+  try {
+    const decoded = verifyToken(token);
+    c.set("user", decoded);
+    await next();
+  } catch (error) {
+    return c.json({ error: "认证失败" }, 401);
+  }
+});
 
 const port = 3001;
 console.log(`Server is running on port ${port}`);

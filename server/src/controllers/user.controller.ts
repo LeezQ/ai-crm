@@ -1,10 +1,10 @@
 import { Context } from "hono";
-import { db } from "../utils/db";
 import { users } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { compare, hash } from "bcryptjs";
 import { signToken } from "../utils/jwt";
 import { z } from "zod";
+import { db } from "@/db";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -69,7 +69,7 @@ export const login = async (c: Context) => {
     const token = signToken({
       id: user.id,
       email: user.email,
-      name: user.name,
+      name: user.name || "",
       role: user.role,
     });
 

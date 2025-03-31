@@ -1,5 +1,5 @@
 import { Context } from "hono";
-import { db } from "../utils/db";
+import { db } from "@/db";
 import { followUps, users } from "../db/schema";
 import { eq } from "drizzle-orm";
 

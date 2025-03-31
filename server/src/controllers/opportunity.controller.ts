@@ -1,5 +1,5 @@
 import { Context } from "hono";
-import { db } from "../utils/db";
+import { db } from "@/db";
 import { opportunities, users, teamMembers } from "../db/schema";
 import { eq, sql, desc, and } from "drizzle-orm";
 
@@ -18,27 +18,22 @@ export const getOpportunities = async (c: Context) => {
 
     const teamIds = userTeams.map((team) => team.teamId).filter(Boolean);
 
+    const whereConditions = [eq(opportunities.ownerId, userId)];
+    if (teamIds.length > 0) {
+      whereConditions.push(sql`${opportunities.teamId} = ANY(${teamIds})`);
+    }
+
     const [{ total }] = await db
       .select({
         total: sql<number>`count(*)::int`,
       })
       .from(opportunities)
-      .where(
-        and(
-          eq(opportunities.ownerId, userId),
-          sql`${opportunities.teamId} = ANY(${teamIds})`
-        )
-      );
+      .where(and(...whereConditions));
 
     const items = await db
       .select()
       .from(opportunities)
-      .where(
-        and(
-          eq(opportunities.ownerId, userId),
-          sql`${opportunities.teamId} = ANY(${teamIds})`
-        )
-      )
+      .where(and(...whereConditions))
       .orderBy(desc(opportunities.id))
       .limit(Number(pageSize))
       .offset(offset);

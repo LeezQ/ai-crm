@@ -13,7 +13,7 @@ const app = new Hono();
 
 // 用户相关路由
 app.post("/api/auth/login", login);
-app.get("/api/auth/profile", getProfile);
+app.get("/api/user/profile", getProfile);
 
 // 商机相关路由
 app.get("/api/opportunities", getOpportunities);
