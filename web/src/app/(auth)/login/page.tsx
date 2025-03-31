@@ -13,7 +13,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',
     password: '',
     rememberMe: false,
   });
@@ -47,27 +47,28 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-[400px]">
-        <CardHeader>
-          <CardTitle>登录</CardTitle>
-          <CardDescription>请输入您的账号和密码</CardDescription>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <Card className="w-[420px]">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold">登录</CardTitle>
+          <CardDescription className="text-sm text-muted-foreground">请输入您的账号和密码</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">用户名</Label>
+          <CardContent className="space-y-6">
+            <div className="space-y-3">
+              <Label htmlFor="email" className="text-sm font-medium">邮箱</Label>
               <Input
-                id="username"
-                type="text"
-                placeholder="请输入用户名"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                id="email"
+                type="email"
+                placeholder="请输入邮箱"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
+                className="h-10"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">密码</Label>
+            <div className="space-y-3">
+              <Label htmlFor="password" className="text-sm font-medium">密码</Label>
               <Input
                 id="password"
                 type="password"
@@ -75,26 +76,27 @@ export default function LoginPage() {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
+                className="h-10"
               />
             </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="rememberMe"
-                checked={formData.rememberMe}
-                onCheckedChange={(checked) => setFormData({ ...formData, rememberMe: checked as boolean })}
-              />
-              <Label htmlFor="rememberMe">记住密码</Label>
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? '登录中...' : '登录'}
-            </Button>
-            <div className="text-sm text-center">
-              <a href="/forgot-password" className="text-blue-600 hover:underline">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2 mb-4">
+                <Checkbox
+                  id="rememberMe"
+                  checked={formData.rememberMe}
+                  onCheckedChange={(checked) => setFormData({ ...formData, rememberMe: checked as boolean })}
+                />
+                <Label htmlFor="rememberMe" className="text-sm font-medium">记住密码</Label>
+              </div>
+              <a href="/forgot-password" className="text-sm text-primary hover:underline">
                 忘记密码？
               </a>
             </div>
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" className="w-full h-10" size="lg" disabled={loading}>
+              {loading ? '登录中...' : '登录'}
+            </Button>
           </CardFooter>
         </form>
       </Card>
