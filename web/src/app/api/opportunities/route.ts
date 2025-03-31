@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { opportunities, users } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, desc } from "drizzle-orm";
 
 export async function GET(request: Request) {
   try {
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
         updatedAt: opportunities.updatedAt,
       })
       .from(opportunities)
-      .orderBy(opportunities.createdAt)
+      .orderBy(desc(opportunities.id))
       .limit(pageSize)
       .offset(offset);
 

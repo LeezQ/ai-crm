@@ -48,9 +48,9 @@ export const teamMembers = pgTable("team_members", {
 // 商机表
 export const opportunities = pgTable("opportunities", {
   id: serial("id").primaryKey(),
-  companyName: text("company_name").notNull(),
+  companyName: text("company_name"),
   website: text("website"),
-  contactPerson: text("contact_person").notNull(),
+  contactPerson: text("contact_person"),
   contactPhone: text("contact_phone"),
   contactWechat: text("contact_wechat"),
   contactDepartment: text("contact_department"),
@@ -66,7 +66,7 @@ export const opportunities = pgTable("opportunities", {
   expectedAmount: decimal("expected_amount", {
     precision: 10,
     scale: 2,
-  }).notNull(),
+  }),
   priority: text("priority").notNull().default("medium"),
   source: text("source"),
   expectedCloseDate: timestamp("expected_close_date"),
