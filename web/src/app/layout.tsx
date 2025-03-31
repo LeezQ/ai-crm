@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
-import { QueryProvider } from "@/providers/query-provider";
+import { Providers } from "./providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,9 +19,9 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className={inter.className}>
-        <QueryProvider>
+        <Providers>
           {children}
-        </QueryProvider>
+        </Providers>
         <Toaster position="top-right" />
       </body>
     </html>

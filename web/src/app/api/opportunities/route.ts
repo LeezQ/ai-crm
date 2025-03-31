@@ -1,39 +1,64 @@
 import { NextResponse } from "next/server";
+import { db } from "@/db";
+import { opportunities, users } from "@/db/schema";
+import { eq, sql } from "drizzle-orm";
 
-// 模拟数据
-const mockOpportunities = [
-  {
-    id: "1",
-    customerName: "阿里巴巴",
-    contactPerson: "马云",
-    expectedAmount: 1000000,
-    status: "following",
-    priority: "high",
-    owner: "张三",
-    createTime: "2024-03-20T10:00:00Z",
-  },
-  {
-    id: "2",
-    customerName: "腾讯科技",
-    contactPerson: "马化腾",
-    expectedAmount: 800000,
-    status: "proposal",
-    priority: "medium",
-    owner: "李四",
-    createTime: "2024-03-19T15:30:00Z",
-  },
-  {
-    id: "3",
-    customerName: "字节跳动",
-    contactPerson: "张一鸣",
-    expectedAmount: 1200000,
-    status: "negotiation",
-    priority: "high",
-    owner: "王五",
-    createTime: "2024-03-18T09:15:00Z",
-  },
-];
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const pageSize = parseInt(searchParams.get("pageSize") || "10");
+    const offset = (page - 1) * pageSize;
 
-export async function GET() {
-  return NextResponse.json(mockOpportunities);
+    // 获取总记录数
+    const [{ total }] = await db
+      .select({
+        total: sql<number>`count(*)::int`,
+      })
+      .from(opportunities);
+
+    // 获取分页数据
+    const items = await db
+      .select({
+        id: opportunities.id,
+        companyName: opportunities.companyName,
+        website: opportunities.website,
+        contactPerson: opportunities.contactPerson,
+        contactPhone: opportunities.contactPhone,
+        contactWechat: opportunities.contactWechat,
+        contactDepartment: opportunities.contactDepartment,
+        contactPosition: opportunities.contactPosition,
+        companySize: opportunities.companySize,
+        region: opportunities.region,
+        industry: opportunities.industry,
+        progress: opportunities.progress,
+        status: opportunities.status,
+        description: opportunities.description,
+        ownerId: opportunities.ownerId,
+        teamId: opportunities.teamId,
+        expectedAmount: opportunities.expectedAmount,
+        priority: opportunities.priority,
+        source: opportunities.source,
+        expectedCloseDate: opportunities.expectedCloseDate,
+        createdAt: opportunities.createdAt,
+        updatedAt: opportunities.updatedAt,
+      })
+      .from(opportunities)
+      .orderBy(opportunities.createdAt)
+      .limit(pageSize)
+      .offset(offset);
+
+    return NextResponse.json({
+      items,
+      pagination: {
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      },
+    });
+  } catch (error) {
+    console.error("获取商机列表失败:", error);
+    return NextResponse.json({ error: "获取商机列表失败" }, { status: 500 });
+  }
 }

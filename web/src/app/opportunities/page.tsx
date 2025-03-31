@@ -1,6 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import dayjs from 'dayjs';
+import 'dayjs/locale/zh-cn';
 import {
   Table,
   TableBody,
@@ -20,53 +23,79 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Search, Download } from 'lucide-react';
+import { Plus, Search, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 
 interface Opportunity {
-  id: string;
-  customerName: string;
+  id: number;
+  companyName: string;
+  website: string;
   contactPerson: string;
-  expectedAmount: number;
-  status: 'new' | 'following' | 'proposal' | 'negotiation' | 'closed' | 'failed';
-  priority: 'high' | 'medium' | 'low';
-  owner: string;
-  createTime: string;
+  contactPhone: string;
+  contactWechat: string;
+  contactDepartment: string;
+  contactPosition: string;
+  companySize: string;
+  region: string;
+  industry: string;
+  progress: string;
+  status: string;
+  description: string;
+  ownerId: number;
+  teamId: number;
+  expectedAmount: string;
+  priority: string;
+  source: string;
+  expectedCloseDate: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
+interface PaginationData {
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+interface OpportunitiesResponse {
+  items: Opportunity[];
+  pagination: PaginationData;
+}
+
+const fetchOpportunities = async (page: number, pageSize: number): Promise<OpportunitiesResponse> => {
+  const response = await fetch(`/api/opportunities?page=${page}&pageSize=${pageSize}`);
+  if (!response.ok) {
+    throw new Error('获取商机列表失败');
+  }
+  return response.json();
+};
+
 export default function OpportunitiesPage() {
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
-  useEffect(() => {
-    fetchOpportunities();
-  }, []);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['opportunities', currentPage, pageSize],
+    queryFn: () => fetchOpportunities(currentPage, pageSize),
+  });
 
-  const fetchOpportunities = async () => {
-    try {
-      const response = await fetch('/api/opportunities');
-      const data = await response.json();
-      setOpportunities(data);
-    } catch (error) {
-      console.error('获取商机列表失败:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const opportunities = data?.items || [];
+  const pagination = data?.pagination;
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
       new: { label: '新建', color: 'bg-blue-500' },
       following: { label: '跟进中', color: 'bg-yellow-500' },
-      proposal: { label: '方案阶段', color: 'bg-purple-500' },
-      negotiation: { label: '谈判阶段', color: 'bg-orange-500' },
+      negotiating: { label: '谈判中', color: 'bg-orange-500' },
       closed: { label: '已成交', color: 'bg-green-500' },
       failed: { label: '已失败', color: 'bg-red-500' },
     };
-    const { label, color } = statusMap[status as keyof typeof statusMap];
-    return <Badge className={color}>{label}</Badge>;
+    const statusInfo = statusMap[status as keyof typeof statusMap] || { label: '未知', color: 'bg-gray-500' };
+    return <Badge className={statusInfo.color}>{statusInfo.label}</Badge>;
   };
 
   const getPriorityBadge = (priority: string) => {
@@ -75,17 +104,28 @@ export default function OpportunitiesPage() {
       medium: { label: '中', color: 'bg-yellow-500' },
       low: { label: '低', color: 'bg-green-500' },
     };
-    const { label, color } = priorityMap[priority as keyof typeof priorityMap];
-    return <Badge className={color}>{label}</Badge>;
+    const priorityInfo = priorityMap[priority as keyof typeof priorityMap] || { label: '未知', color: 'bg-gray-500' };
+    return <Badge className={priorityInfo.color}>{priorityInfo.label}</Badge>;
   };
 
   const filteredOpportunities = opportunities.filter((opp) => {
-    const matchesSearch = opp.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      opp.contactPerson.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (opp.companyName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (opp.contactPerson?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || opp.status === statusFilter;
     const matchesPriority = priorityFilter === 'all' || opp.priority === priorityFilter;
     return matchesSearch && matchesStatus && matchesPriority;
   });
+
+  const formatDate = (date: string) => {
+    return dayjs(date).locale('zh-cn').format('YYYY-MM-DD');
+  };
+
+  const formatDateTime = (date: string) => {
+    return dayjs(date).locale('zh-cn').format('YYYY-MM-DD HH:mm');
+  };
+
+  if (isLoading) return <div>加载中...</div>;
+  if (error) return <div>加载失败</div>;
 
   return (
     <div className="container mx-auto py-6">
@@ -115,8 +155,7 @@ export default function OpportunitiesPage() {
                 <SelectItem value="all">全部状态</SelectItem>
                 <SelectItem value="new">新建</SelectItem>
                 <SelectItem value="following">跟进中</SelectItem>
-                <SelectItem value="proposal">方案阶段</SelectItem>
-                <SelectItem value="negotiation">谈判阶段</SelectItem>
+                <SelectItem value="negotiating">谈判中</SelectItem>
                 <SelectItem value="closed">已成交</SelectItem>
                 <SelectItem value="failed">已失败</SelectItem>
               </SelectContent>
@@ -141,35 +180,85 @@ export default function OpportunitiesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>客户名称</TableHead>
+                <TableHead>公司名称</TableHead>
+                <TableHead>网站</TableHead>
                 <TableHead>联系人</TableHead>
-                <TableHead>预期金额</TableHead>
+                <TableHead>联系电话</TableHead>
+                <TableHead>微信</TableHead>
+                <TableHead>部门</TableHead>
+                <TableHead>职位</TableHead>
+                <TableHead>公司规模</TableHead>
+                <TableHead>地区</TableHead>
+                <TableHead>行业</TableHead>
+                <TableHead>进度</TableHead>
                 <TableHead>状态</TableHead>
+                <TableHead>预期金额</TableHead>
                 <TableHead>优先级</TableHead>
-                <TableHead>负责人</TableHead>
+                <TableHead>来源</TableHead>
+                <TableHead>预计成交日期</TableHead>
                 <TableHead>创建时间</TableHead>
+                <TableHead>更新时间</TableHead>
                 <TableHead>操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredOpportunities.map((opp) => (
                 <TableRow key={opp.id}>
-                  <TableCell>{opp.customerName}</TableCell>
+                  <TableCell>{opp.companyName}</TableCell>
+                  <TableCell>{opp.website}</TableCell>
                   <TableCell>{opp.contactPerson}</TableCell>
-                  <TableCell>¥{opp.expectedAmount.toLocaleString()}</TableCell>
+                  <TableCell>{opp.contactPhone}</TableCell>
+                  <TableCell>{opp.contactWechat}</TableCell>
+                  <TableCell>{opp.contactDepartment}</TableCell>
+                  <TableCell>{opp.contactPosition}</TableCell>
+                  <TableCell>{opp.companySize}</TableCell>
+                  <TableCell>{opp.region}</TableCell>
+                  <TableCell>{opp.industry}</TableCell>
+                  <TableCell>{getStatusBadge(opp.progress)}</TableCell>
                   <TableCell>{getStatusBadge(opp.status)}</TableCell>
+                  <TableCell>¥{parseFloat(opp.expectedAmount).toLocaleString()}</TableCell>
                   <TableCell>{getPriorityBadge(opp.priority)}</TableCell>
-                  <TableCell>{opp.owner}</TableCell>
-                  <TableCell>{new Date(opp.createTime).toLocaleDateString()}</TableCell>
+                  <TableCell>{opp.source}</TableCell>
+                  <TableCell>{opp.expectedCloseDate ? formatDate(opp.expectedCloseDate) : '-'}</TableCell>
+                  <TableCell>{formatDateTime(opp.createdAt)}</TableCell>
+                  <TableCell>{formatDateTime(opp.updatedAt)}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm">
-                      查看
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link href={`/opportunities/${opp.id}`}>查看</Link>
                     </Button>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+
+          {pagination && (
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-gray-500">
+                共 {pagination.total} 条记录，第 {pagination.page} / {pagination.totalPages} 页
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  上一页
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(page => Math.min(pagination.totalPages, page + 1))}
+                  disabled={currentPage === pagination.totalPages}
+                >
+                  下一页
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
