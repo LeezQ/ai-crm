@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -92,10 +91,10 @@ export default function TeamsPage() {
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>团队管理</CardTitle>
+    <div className="">
+      <div className="bg-background p-4 rounded-lg">
+        <div className="flex flex-row items-center justify-between mb-4">
+          <div className="font-medium text-lg">团队管理</div>
           <div className="flex gap-2">
             <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
               <DialogTrigger asChild>
@@ -149,8 +148,8 @@ export default function TeamsPage() {
               导入成员
             </Button>
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -186,8 +185,8 @@ export default function TeamsPage() {
               ))}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

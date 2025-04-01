@@ -36,9 +36,9 @@ export const teamMemberController = {
     }
     const userId = user.id;
 
-    // 2. 检查用户是否已在该团队
+    // 2. 检查用户是否已在该团队 (只选择存在的列)
     const [existingMember] = await db
-      .select()
+      .select({ id: teamMembers.id }) // Select only existing 'id' column
       .from(teamMembers)
       .where(
         and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, userId))
@@ -51,7 +51,7 @@ export const teamMemberController = {
     const [newMember] = await db
       .insert(teamMembers)
       .values({ teamId, userId, role })
-      .returning();
+      .returning(); // Revert to default returning (all columns defined in schema)
     return newMember;
   },
 
@@ -60,13 +60,7 @@ export const teamMemberController = {
     const [deletedMember] = await db
       .delete(teamMembers)
       .where(eq(teamMembers.id, memberId))
-      // Only return columns that exist
-      .returning({
-        id: teamMembers.id,
-        teamId: teamMembers.teamId,
-        userId: teamMembers.userId,
-        role: teamMembers.role,
-      });
+      .returning(); // Revert to default returning
     if (!deletedMember) {
       throw new Error(`ID 为 ${memberId} 的团队成员记录不存在`);
     }

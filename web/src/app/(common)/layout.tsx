@@ -74,7 +74,7 @@ export default function MainLayout({
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
+      <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-16 items-center px-6">
           <div className="flex-1">
             <h1 className="text-xl font-semibold text-primary">AI CRM</h1>
@@ -116,7 +116,7 @@ export default function MainLayout({
         {/* Sidebar */}
         <aside
           className={cn(
-            'fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm transition-transform duration-200 ease-in-out overflow-y-auto',
+            'fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-transform duration-200 ease-in-out overflow-y-auto',
             isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
           )}
         >

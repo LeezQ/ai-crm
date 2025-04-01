@@ -60,7 +60,7 @@ export default function NewOpportunityPage() {
   };
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="">
       <Card>
         <CardHeader>
           <CardTitle>新建商机</CardTitle>

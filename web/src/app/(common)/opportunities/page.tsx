@@ -21,7 +21,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Drawer,
   DrawerClose,
@@ -128,11 +127,9 @@ export default function OpportunitiesPage() {
   if (loading) {
     return (
       <div className="">
-        <Card>
-          <CardContent className="flex items-center justify-center h-[400px]">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </CardContent>
-        </Card>
+        <div className="flex items-center justify-center h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
       </div>
     );
   }

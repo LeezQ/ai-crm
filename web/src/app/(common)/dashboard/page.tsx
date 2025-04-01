@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -57,43 +56,41 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">客户总数</CardTitle>
+        <div className="bg-background p-4 rounded-lg">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div className="text-sm font-medium">客户总数</div>
             <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div>
             <div className="text-2xl font-bold">{data.totalCustomers}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">订单总数</CardTitle>
+          </div>
+        </div>
+        <div className="bg-background p-4 rounded-lg">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div className="text-sm font-medium">订单总数</div>
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div>
             <div className="text-2xl font-bold">{data.totalOrders}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">总收入</CardTitle>
+          </div>
+        </div>
+        <div className="bg-background p-4 rounded-lg">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div className="text-sm font-medium">总收入</div>
             <CheckSquare className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div>
             <div className="text-2xl font-bold">¥{data.totalRevenue.toLocaleString()}</div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>最近订单</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="bg-background p-4 rounded-lg">
+          <div className="mb-4 font-medium">最近订单</div>
+          <div>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -116,14 +113,12 @@ export default function DashboardPage() {
                 ))}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>最近客户</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="bg-background p-4 rounded-lg">
+          <div className="mb-4 font-medium">最近客户</div>
+          <div>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -142,8 +137,8 @@ export default function DashboardPage() {
                 ))}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

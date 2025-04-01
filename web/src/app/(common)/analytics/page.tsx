@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -71,7 +70,7 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">统计分析</h1>
         <div className="flex gap-4">
@@ -94,104 +93,84 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>商机总量</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{data.totalOpportunities}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>预期总金额</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">¥{data.totalAmount.toLocaleString()}</div>
-          </CardContent>
-        </Card>
+        <div className="bg-background p-4 rounded-lg">
+          <div className="mb-2 font-medium">商机总量</div>
+          <div className="text-3xl font-bold">{data.totalOpportunities}</div>
+        </div>
+        <div className="bg-background p-4 rounded-lg">
+          <div className="mb-2 font-medium">预期总金额</div>
+          <div className="text-3xl font-bold">¥{data.totalAmount.toLocaleString()}</div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>商机状态分布</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={data.statusDistribution}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {data.statusDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>优先级分布</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={data.priorityDistribution}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {data.priorityDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>月度趋势</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[400px]">
+        <div className="bg-background p-4 rounded-lg">
+          <div className="mb-2 font-medium">商机状态分布</div>
+          <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.monthlyTrend}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis yAxisId="left" orientation="left" stroke="#8884d8" />
-                <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" />
+              <PieChart>
+                <Pie
+                  data={data.statusDistribution}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {data.statusDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
                 <Tooltip />
                 <Legend />
-                <Bar yAxisId="left" dataKey="count" name="商机数量" fill="#8884d8" />
-                <Bar yAxisId="right" dataKey="amount" name="预期金额" fill="#82ca9d" />
-              </BarChart>
+              </PieChart>
             </ResponsiveContainer>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        <div className="bg-background p-4 rounded-lg">
+          <div className="mb-2 font-medium">优先级分布</div>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={data.priorityDistribution}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {data.priorityDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-background p-4 rounded-lg">
+        <div className="mb-2 font-medium">月度趋势</div>
+        <div className="h-[400px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data.monthlyTrend}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis yAxisId="left" orientation="left" stroke="#8884d8" />
+              <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" />
+              <Tooltip />
+              <Legend />
+              <Bar yAxisId="left" dataKey="count" name="商机数量" fill="#8884d8" />
+              <Bar yAxisId="right" dataKey="amount" name="预期金额" fill="#82ca9d" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
     </div>
   );
 }

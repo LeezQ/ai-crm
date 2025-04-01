@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -93,10 +94,16 @@ export default function LoginPage() {
               </a>
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full h-10" size="lg" disabled={loading}>
               {loading ? '登录中...' : '登录'}
             </Button>
+            <p className="text-center text-sm">
+              还没有账号？
+              <Link href="/register" className="text-primary hover:underline ml-1">
+                注册
+              </Link>
+            </p>
           </CardFooter>
         </form>
       </Card>

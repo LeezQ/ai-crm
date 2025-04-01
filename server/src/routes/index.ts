@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { login, getProfile } from "../controllers/user.controller";
+import { login, getProfile, register } from "../controllers/user.controller";
 import {
   getFollowUps,
   createFollowUp,
@@ -12,6 +12,7 @@ const app = new Hono();
 
 // 用户相关路由
 app.post("/api/auth/login", login);
+app.post("/api/auth/register", register);
 app.get("/api/user/profile", getProfile);
 
 // 团队相关路由

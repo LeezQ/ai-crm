@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -104,11 +103,11 @@ export default function TeamMembersPage() {
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+    <div className="">
+      <div className="bg-background p-4 rounded-lg">
+        <div className="flex flex-row items-center justify-between mb-4">
           <div>
-            <CardTitle>{team.name}</CardTitle>
+            <div className="font-medium text-lg">{team.name}</div>
             <p className="text-sm text-gray-500">{team.description}</p>
           </div>
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
@@ -157,8 +156,8 @@ export default function TeamMembersPage() {
               </form>
             </DialogContent>
           </Dialog>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -195,8 +194,8 @@ export default function TeamMembersPage() {
               ))}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

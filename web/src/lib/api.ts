@@ -66,6 +66,21 @@ export const api = {
         method: "POST",
         data,
       }),
+    register: (data: { name: string; email: string; password: string }) =>
+      request<{
+        success: boolean;
+        message: string;
+        data?: {
+          user: {
+            id: number;
+            email: string;
+            name: string;
+          };
+        };
+      }>("/api/auth/register", {
+        method: "POST",
+        data,
+      }),
     getProfile: () =>
       request<{
         id: number;

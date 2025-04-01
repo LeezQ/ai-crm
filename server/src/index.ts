@@ -24,7 +24,7 @@ app.use(logger());
 
 // JWT 中间件
 app.use("*", async (c, next) => {
-  if (c.req.path === "/api/auth/login") {
+  if (c.req.path === "/api/auth/login" || c.req.path === "/api/auth/register") {
     await next();
     return;
   }
