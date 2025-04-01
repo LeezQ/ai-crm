@@ -19,7 +19,9 @@ instance.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
     config.headers["authorization"] = `Bearer ${token}`;
+    config.headers["teamId"] = localStorage.getItem("teamId") || "";
   }
+
   return config;
 });
 

@@ -22,7 +22,17 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Search, Download, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
+import { Plus, Search, Download, ChevronLeft, ChevronRight, Loader2, Eye } from 'lucide-react';
 import Link from 'next/link';
 
 interface OpportunitiesResponse {
@@ -45,6 +55,8 @@ export default function OpportunitiesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   useEffect(() => {
     fetchOpportunities();
@@ -67,6 +79,19 @@ export default function OpportunitiesPage() {
     }
   };
 
+  const handleViewDetails = (opportunity: Opportunity) => {
+    setSelectedOpportunity(opportunity);
+    setIsDrawerOpen(true);
+  };
+
+  const handleDrawerClose = () => {
+    setIsDrawerOpen(false);
+    // Delay clearing the selected opportunity to allow the drawer to animate closed
+    setTimeout(() => {
+      setSelectedOpportunity(null);
+    }, 300);
+  };
+
   const getStatusBadge = (status: string) => {
     const statusMap = {
       new: { label: '新建', color: 'bg-blue-500' },
@@ -74,9 +99,11 @@ export default function OpportunitiesPage() {
       negotiating: { label: '谈判中', color: 'bg-orange-500' },
       closed: { label: '已成交', color: 'bg-green-500' },
       failed: { label: '已失败', color: 'bg-red-500' },
+      active: { label: '活跃', color: 'bg-teal-500' },
+      initial: { label: '初始', color: 'bg-gray-400' },
     };
     const statusInfo = statusMap[status as keyof typeof statusMap] || { label: '未知', color: 'bg-gray-500' };
-    return <Badge className={statusInfo.color}>{statusInfo.label}</Badge>;
+    return <Badge className={`${statusInfo.color} text-white`}>{statusInfo.label}</Badge>;
   };
 
   const getPriorityBadge = (priority: string) => {
@@ -84,9 +111,10 @@ export default function OpportunitiesPage() {
       high: { label: '高', color: 'bg-red-500' },
       medium: { label: '中', color: 'bg-yellow-500' },
       low: { label: '低', color: 'bg-green-500' },
+      normal: { label: '普通', color: 'bg-blue-500' },
     };
     const priorityInfo = priorityMap[priority as keyof typeof priorityMap] || { label: '未知', color: 'bg-gray-500' };
-    return <Badge className={priorityInfo.color}>{priorityInfo.label}</Badge>;
+    return <Badge className={`${priorityInfo.color} text-white`}>{priorityInfo.label}</Badge>;
   };
 
   const filteredOpportunities = opportunities.filter((opp) => {
@@ -118,9 +146,11 @@ export default function OpportunitiesPage() {
       <div className="bg-white">
         <div className="flex flex-row items-center justify-between mb-6">
           <h2 className="text-2xl font-semibold">商机管理</h2>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            新建商机
+          <Button asChild>
+            <Link href="/opportunities/new">
+              <Plus className="mr-2 h-4 w-4" />
+              新建商机
+            </Link>
           </Button>
         </div>
         <div>
@@ -189,7 +219,10 @@ export default function OpportunitiesPage() {
             </TableHeader>
             <TableBody>
               {filteredOpportunities.map((opp) => (
-                <TableRow key={opp.id}>
+                <TableRow
+                  key={opp.id}
+                  className={selectedOpportunity && opp.id === selectedOpportunity.id ? 'bg-blue-100' : ''}
+                >
                   <TableCell>{opp.companyName}</TableCell>
                   <TableCell>{opp.website}</TableCell>
                   <TableCell>{opp.contactPerson}</TableCell>
@@ -209,14 +242,69 @@ export default function OpportunitiesPage() {
                   <TableCell>{opp.createdAt}</TableCell>
                   <TableCell>{opp.updatedAt}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/opportunities/${opp.id}`}>查看</Link>
+                    <Button variant="ghost" size="sm" onClick={() => handleViewDetails(opp)}>
+                      <Eye className="h-4 w-4 mr-1" /> 查看
                     </Button>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+
+          {/* Drawer for Opportunity Details */}
+          <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen} direction="right">
+            <DrawerContent className="w-[500px] h-full">
+              {selectedOpportunity && (
+                <>
+                  <DrawerHeader className="text-left">
+                    <DrawerTitle>商机详情: {selectedOpportunity.companyName}</DrawerTitle>
+                    <DrawerDescription>
+                      查看和编辑商机详细信息。
+                    </DrawerDescription>
+                  </DrawerHeader>
+                  <div className="p-4 pb-0 space-y-4 overflow-y-auto">
+                    {/* Display Opportunity Details Here */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="font-semibold">公司名称:</div><div>{selectedOpportunity.companyName}</div>
+                      <div className="font-semibold">网站:</div><div>{selectedOpportunity.website || '-'}</div>
+                      <div className="font-semibold">联系人:</div><div>{selectedOpportunity.contactPerson || '-'}</div>
+                      <div className="font-semibold">联系电话:</div><div>{selectedOpportunity.contactPhone || '-'}</div>
+                      <div className="font-semibold">微信:</div><div>{selectedOpportunity.contactWechat || '-'}</div>
+                      <div className="font-semibold">部门:</div><div>{selectedOpportunity.contactDepartment || '-'}</div>
+                      <div className="font-semibold">职位:</div><div>{selectedOpportunity.contactPosition || '-'}</div>
+                      <div className="font-semibold">公司规模:</div><div>{selectedOpportunity.companySize || '-'}</div>
+                      <div className="font-semibold">地区:</div><div>{selectedOpportunity.region || '-'}</div>
+                      <div className="font-semibold">行业:</div><div>{selectedOpportunity.industry || '-'}</div>
+                      <div className="font-semibold">进度:</div><div>{getStatusBadge(selectedOpportunity.progress)}</div>
+                      <div className="font-semibold">状态:</div><div>{getStatusBadge(selectedOpportunity.status)}</div>
+                      <div className="font-semibold">优先级:</div><div>{getPriorityBadge(selectedOpportunity.priority)}</div>
+                      <div className="font-semibold">预期金额:</div><div>¥{parseFloat(selectedOpportunity.expectedAmount || '0').toLocaleString()}</div>
+                      <div className="font-semibold">来源:</div><div>{selectedOpportunity.source || '-'}</div>
+                      <div className="font-semibold">预计成交日期:</div><div>{selectedOpportunity.expectedCloseDate ? new Date(selectedOpportunity.expectedCloseDate).toLocaleDateString() : '-'}</div>
+                      <div className="font-semibold">创建时间:</div><div>{selectedOpportunity.createdAt ? new Date(selectedOpportunity.createdAt).toLocaleString() : '-'}</div>
+                      <div className="font-semibold">更新时间:</div><div>{selectedOpportunity.updatedAt ? new Date(selectedOpportunity.updatedAt).toLocaleString() : '-'}</div>
+                      {/* Add other fields like owner, description etc. if needed */}
+                    </div>
+                    <div className="pt-4">
+                      <h4 className="font-semibold mb-2">描述:</h4>
+                      <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedOpportunity.description || '无描述'}</p>
+                    </div>
+                  </div>
+                  <DrawerFooter className="pt-2">
+                    <Button>编辑</Button> {/* TODO: Implement Edit Functionality */}
+                    <DrawerClose asChild>
+                      <Button variant="outline" onClick={handleDrawerClose}>关闭</Button>
+                    </DrawerClose>
+                  </DrawerFooter>
+                </>
+              )}
+              {!selectedOpportunity && (
+                <div className="flex justify-center items-center h-full">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              )}
+            </DrawerContent>
+          </Drawer>
 
           <div className="flex items-center justify-between mt-4">
             <div className="text-sm text-gray-500">

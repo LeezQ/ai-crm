@@ -1,0 +1,13 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+
+- You can @ files here
+- You can use markdown but dont have to
+
+server 端使用 hono + pg
+web 端使用 nextjs，但是不要使用服务端组件

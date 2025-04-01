@@ -6,6 +6,7 @@ import { eq, sql, desc, and } from "drizzle-orm";
 export const getOpportunities = async (c: Context) => {
   try {
     const userId = c.get("user").id;
+    const currentTeamId = parseInt(c.get("user").currentTeamId);
     const { page = 1, pageSize = 10 } = c.req.query();
     const offset = (Number(page) - 1) * Number(pageSize);
 
@@ -18,8 +19,10 @@ export const getOpportunities = async (c: Context) => {
 
     const teamIds = userTeams.map((team) => team.teamId).filter(Boolean);
 
-    const whereConditions = [eq(opportunities.ownerId, userId)];
-    if (teamIds.length > 0) {
+    const whereConditions = [];
+    if (currentTeamId) {
+      whereConditions.push(eq(opportunities.teamId, currentTeamId));
+    } else if (teamIds.length > 0) {
       whereConditions.push(sql`${opportunities.teamId} = ANY(${teamIds})`);
     }
 

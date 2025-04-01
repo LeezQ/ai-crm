@@ -9,7 +9,7 @@ import { verifyToken, User } from "./utils/jwt";
 
 const app = new Hono<{
   Variables: {
-    user: User;
+    user: User & { currentTeamId: string };
   };
 }>();
 
@@ -24,7 +24,13 @@ app.use(logger());
 
 // JWT 中间件
 app.use("*", async (c, next) => {
+  if (c.req.path === "/api/auth/login") {
+    await next();
+    return;
+  }
+
   const authHeader = c.req.header("Authorization");
+  const teamId = c.req.header("Teamid") as any;
   if (!authHeader) {
     return c.json({ error: "未提供认证信息" }, 401);
   }
@@ -36,7 +42,10 @@ app.use("*", async (c, next) => {
 
   try {
     const decoded = verifyToken(token);
-    c.set("user", decoded);
+    c.set("user", {
+      ...decoded,
+      currentTeamId: teamId,
+    });
     await next();
   } catch (error) {
     return c.json({ error: "认证失败" }, 401);
