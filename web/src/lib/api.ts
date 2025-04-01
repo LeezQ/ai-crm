@@ -126,15 +126,18 @@ export const api = {
 
   // 团队相关
   teams: {
-    list: () => request("/api/teams"),
-    get: (id: string) => request(`/api/teams/${id}`),
-    create: (data: any) =>
-      request("/api/teams", {
+    list: () => request<Team[]>("/api/teams"),
+    get: (id: string) => request<Team>(`/api/teams/${id}`),
+    create: (data: Omit<Team, "id" | "memberCount" | "createTime">) =>
+      request<Team>("/api/teams", {
         method: "POST",
         data,
       }),
-    update: (id: string, data: any) =>
-      request(`/api/teams/${id}`, {
+    update: (
+      id: string,
+      data: Partial<Omit<Team, "id" | "memberCount" | "createTime">>
+    ) =>
+      request<Team>(`/api/teams/${id}`, {
         method: "PUT",
         data,
       }),
@@ -143,23 +146,26 @@ export const api = {
         method: "DELETE",
       }),
     members: {
-      list: (id: string) => request(`/api/teams/${id}/members`),
-      add: (id: string, data: any) =>
-        request(`/api/teams/${id}/members`, {
+      list: (id: string) => request<TeamMember[]>(`/api/teams/${id}/members`),
+      add: (id: string, data: { email: string; role: "admin" | "member" }) =>
+        request<any>(`/api/teams/${id}/members`, {
           method: "POST",
           data,
         }),
-      remove: (id: string, memberId: string) =>
+      remove: (id: string, memberId: number) =>
         request(`/api/teams/${id}/members/${memberId}`, {
           method: "DELETE",
         }),
     },
-    import: (id: string, file: File) => {
+    import: (file: File) => {
       const formData = new FormData();
       formData.append("file", file);
-      return request(`/api/teams/${id}/import`, {
+      return request(`/api/teams/import`, {
         method: "POST",
         data: formData,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
     },
   },
@@ -173,3 +179,22 @@ export const api = {
       request("/api/analytics/teams", { params }),
   },
 };
+
+// Exported interfaces matching backend structure (assuming numeric IDs)
+export interface TeamMember {
+  memberId: number; // Matches backend parseInt and select alias
+  userId: number; // Matches backend parseInt and select alias
+  name: string;
+  email: string;
+  role: "admin" | "member";
+  // Status and joinedAt are not in list response
+}
+
+export interface Team {
+  id: string; // Keep string for now, adjust if needed
+  name: string;
+  description: string;
+  memberCount: number;
+  createTime: string;
+  admin: string;
+}

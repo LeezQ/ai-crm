@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,7 +23,10 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Upload, MoreVertical } from 'lucide-react';
+import { Plus, Upload, MoreVertical, Users } from 'lucide-react';
+import Link from 'next/link';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 
 interface Team {
   id: string;
@@ -43,8 +46,6 @@ interface TeamMember {
 }
 
 export default function TeamsPage() {
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newTeam, setNewTeam] = useState({
     name: '',
@@ -52,61 +53,43 @@ export default function TeamsPage() {
     admin: '',
   });
 
-  useEffect(() => {
-    fetchTeams();
-  }, []);
+  const queryClient = useQueryClient();
 
-  const fetchTeams = async () => {
-    try {
-      const response = await fetch('/api/teams');
-      const data = await response.json();
-      setTeams(data);
-    } catch (error) {
-      console.error('获取团队列表失败:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: teams = [], isLoading } = useQuery<Team[]>({
+    queryKey: ['teams'],
+    queryFn: api.teams.list,
+  });
+
+  const createTeamMutation = useMutation({
+    mutationFn: api.teams.create,
+    onSuccess: () => {
+      setShowCreateDialog(false);
+      setNewTeam({ name: '', description: '', admin: '' });
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
+    },
+  });
+
+  const importMembersMutation = useMutation({
+    mutationFn: api.teams.import,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
+    },
+  });
 
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const response = await fetch('/api/teams', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newTeam),
-      });
-      if (response.ok) {
-        setShowCreateDialog(false);
-        setNewTeam({ name: '', description: '', admin: '' });
-        fetchTeams();
-      }
-    } catch (error) {
-      console.error('创建团队失败:', error);
-    }
+    createTeamMutation.mutate(newTeam);
   };
 
   const handleImportMembers = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await fetch('/api/teams/import', {
-        method: 'POST',
-        body: formData,
-      });
-      if (response.ok) {
-        fetchTeams();
-      }
-    } catch (error) {
-      console.error('导入成员失败:', error);
-    }
+    importMembersMutation.mutate(file);
   };
+
+  if (isLoading) {
+    return <div>加载中...</div>;
+  }
 
   return (
     <div className="container mx-auto py-6">
@@ -180,7 +163,7 @@ export default function TeamsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {teams.map((team) => (
+              {Array.isArray(teams) && teams.map((team: Team) => (
                 <TableRow key={team.id}>
                   <TableCell>{team.name}</TableCell>
                   <TableCell>{team.description}</TableCell>
@@ -188,9 +171,16 @@ export default function TeamsPage() {
                   <TableCell>{team.admin}</TableCell>
                   <TableCell>{new Date(team.createTime).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-2">
+                      <Link href={`/teams/${team.id}`}>
+                        <Button variant="ghost" size="sm">
+                          <Users className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Button variant="ghost" size="sm">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
