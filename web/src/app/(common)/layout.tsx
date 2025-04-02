@@ -13,6 +13,7 @@ import {
   LogOut,
   User,
   ChevronDown,
+  MessageSquare,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -27,6 +28,7 @@ const menuItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: '仪表盘' },
   { href: '/opportunities', icon: Briefcase, label: '商机管理' },
   { href: '/teams', icon: Users, label: '团队管理' },
+  { href: '/chat', icon: MessageSquare, label: 'AI 助手' },
   { href: '/settings', icon: Settings, label: '系统设置' },
 ];
 

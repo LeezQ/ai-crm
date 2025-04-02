@@ -7,7 +7,7 @@ import {
 import { opportunityRoutes } from "../controllers/opportunity";
 import { teamRoutes } from "../controllers/team";
 import { teamMemberRoutes } from "../controllers/teamMember";
-
+import { streamData } from "../controllers/chat.controller";
 const app = new Hono();
 
 // 用户相关路由
@@ -37,5 +37,8 @@ app.delete("/api/opportunities/:id", opportunityRoutes.delete);
 // 跟进相关路由
 app.get("/api/opportunities/:id/follow-ups", getFollowUps);
 app.post("/api/opportunities/:id/follow-ups", createFollowUp);
+
+// 聊天相关路由
+app.post("/api/ai/chat", streamData);
 
 export const routes = app;
