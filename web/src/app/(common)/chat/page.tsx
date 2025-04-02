@@ -14,7 +14,17 @@ interface Message {
 }
 
 export default function ChatPage() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
+  const { messages, input, handleInputChange, handleSubmit, status } = useChat({
+    api: '/api/ai/chat',
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    }
+  });
+
+
+  console.log(12, messages);
+
+  const isDisabled = status === 'submitted' || status === 'streaming';
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] bg-background rounded-lg">
@@ -36,6 +46,9 @@ export default function ChatPage() {
                   : 'bg-muted'}`}
               >
                 {message.content}
+                {status === 'streaming' && message.role === 'assistant' && (
+                  <span className="animate-pulse">▋</span>
+                )}
               </div>
               {message.role === 'user' && (
                 <Avatar className="h-8 w-8">
@@ -52,10 +65,10 @@ export default function ChatPage() {
             value={input}
             placeholder="输入您的问题..."
             onChange={handleInputChange}
-            disabled={isLoading}
+            disabled={isDisabled}
             className="flex-1"
           />
-          <Button type="submit" disabled={isLoading || !input.trim()}>
+          <Button type="submit" disabled={isDisabled || !input.trim()}>
             <SendHorizonal className="h-4 w-4" />
             <span className="sr-only">发送</span>
           </Button>

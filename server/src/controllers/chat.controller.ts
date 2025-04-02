@@ -1,34 +1,41 @@
-import { openai } from "@ai-sdk/openai";
-import { createDataStream, streamText } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
+import { streamText } from "ai";
 import { Context } from "hono";
 import { stream } from "hono/streaming";
 
+interface Message {
+  role: string;
+  content: string;
+}
+
+const customAPI = createOpenAI({
+  baseURL: process.env.OPENAI_BASE_URL || "https://api.sealos.vip/v1",
+  apiKey:
+    process.env.OPENAI_API_KEY ||
+    "sk-DtkY5AgFJeSyUE5iC0B9773c56B744299f9292Ef8984F5D9",
+  compatibility: "strict",
+});
+
 export const streamData = async (c: Context) => {
-  // immediately start streaming the response
-  const model = openai("gpt-4o");
-  const dataStream = createDataStream({
-    execute: async (dataStreamWriter) => {
-      dataStreamWriter.writeData("initialized call");
+  try {
+    const { messages } = await c.req.json();
+    const model = customAPI("qwen-max");
 
-      const result = streamText({
-        model,
-        prompt: "Invent a new holiday and describe its traditions.",
-      });
+    const result = streamText({
+      model,
+      prompt: messages[messages.length - 1].content,
+    });
 
-      result.mergeIntoDataStream(dataStreamWriter);
-    },
-    onError: (error) => {
-      // Error messages are masked by default for security reasons.
-      // If you want to expose the error message to the client, you can do so here:
-      return error instanceof Error ? error.message : String(error);
-    },
-  });
+    c.header("Content-Type", "text/event-stream");
+    c.header("Cache-Control", "no-cache");
+    c.header("Connection", "keep-alive");
 
-  // Mark the response as a v1 data stream:
-  c.header("X-Vercel-AI-Data-Stream", "v1");
-  c.header("Content-Type", "text/plain; charset=utf-8");
-
-  return stream(c, (stream) =>
-    stream.pipe(dataStream.pipeThrough(new TextEncoderStream()))
-  );
+    return stream(c, (stream) => stream.pipe(result.textStream));
+  } catch (error) {
+    console.error("Error in streamData:", error);
+    return c.json(
+      { error: error instanceof Error ? error.message : "聊天请求处理失败" },
+      500
+    );
+  }
 };
