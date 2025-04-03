@@ -1,5 +1,5 @@
-import { createOpenAI } from "@ai-sdk/openai";
-import { streamText } from "ai";
+import { createOpenAI, openai } from "@ai-sdk/openai";
+import { createDataStream, streamText } from "ai";
 import { Context } from "hono";
 import { stream } from "hono/streaming";
 
@@ -13,29 +13,34 @@ const customAPI = createOpenAI({
   apiKey:
     process.env.OPENAI_API_KEY ||
     "sk-DtkY5AgFJeSyUE5iC0B9773c56B744299f9292Ef8984F5D9",
-  compatibility: "strict",
 });
 
+const model = customAPI("gpt-4o-mini");
+
 export const streamData = async (c: Context) => {
-  try {
-    const { messages } = await c.req.json();
-    const model = customAPI("qwen-max");
+  const { messages } = await c.req.json();
 
-    const result = streamText({
-      model,
-      prompt: messages[messages.length - 1].content,
-    });
+  const dataStream = createDataStream({
+    execute: async (dataStreamWriter) => {
+      dataStreamWriter.writeData("初始化...");
 
-    c.header("Content-Type", "text/event-stream");
-    c.header("Cache-Control", "no-cache");
-    c.header("Connection", "keep-alive");
+      const result = streamText({
+        model: model,
+        messages,
+      });
 
-    return stream(c, (stream) => stream.pipe(result.textStream));
-  } catch (error) {
-    console.error("Error in streamData:", error);
-    return c.json(
-      { error: error instanceof Error ? error.message : "聊天请求处理失败" },
-      500
-    );
-  }
+      result.mergeIntoDataStream(dataStreamWriter);
+    },
+    onError: (error) => {
+      return error instanceof Error ? error.message : String(error);
+    },
+  });
+
+  // 设置响应头
+  c.header("X-Vercel-AI-Data-Stream", "v1");
+  c.header("Content-Type", "text/plain; charset=utf-8");
+
+  return stream(c, (stream) =>
+    stream.pipe(dataStream.pipeThrough(new TextEncoderStream()))
+  );
 };
