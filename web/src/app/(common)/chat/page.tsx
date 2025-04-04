@@ -163,7 +163,12 @@ export default function Chat() {
 
   return (
     <div className="h-full flex flex-col bg-white rounded-xl overflow-hidden">
-      <ScrollArea ref={messagesContainerRef} className="flex-1">
+      <ScrollArea
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto"
+        scrollHideDelay={100}
+        type="always"
+      >
         {messages.length === 0 ? (
           // Initial State View
           <div className="max-w-3xl mx-auto px-4 pt-16 pb-10 text-center">
@@ -261,7 +266,7 @@ export default function Chat() {
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="p-4 border-t bg-white">
+      <div className="p-4 border-t bg-white flex-shrink-0">
         <form
           id="chat-form"
           onSubmit={handleFormSubmit}
