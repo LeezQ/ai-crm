@@ -1,7 +1,7 @@
 'use client';
 
 import { useChat, type Message } from '@ai-sdk/react';
-import { useState, useRef, useEffect, ChangeEvent, KeyboardEvent } from 'react';
+import { useState, useRef, useEffect, ChangeEvent, KeyboardEvent, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,8 +20,28 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+// 三点动画加载指示器
+const ThreeDotsLoadingIndicator = () => {
+  return (
+    <div className="flex items-center">
+      <div className="flex space-x-1.5">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="h-2 w-2 rounded-full bg-primary animate-pulse"
+            style={{
+              animationDelay: `${i * 150}ms`,
+              animationDuration: '1s',
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // 添加字符级打字效果组件
-const TypeWriter: React.FC<{ content: string; isLoading: boolean }> = ({ content, isLoading }) => {
+const TypeWriter: React.FC<{ content: string; isLoading: boolean; scrollToBottom: () => void }> = ({ content, isLoading, scrollToBottom }) => {
   const [displayedContent, setDisplayedContent] = useState('');
   const contentRef = useRef(content);
   const indexRef = useRef(0);
@@ -57,6 +77,9 @@ const TypeWriter: React.FC<{ content: string; isLoading: boolean }> = ({ content
           const endIndex = Math.min(prevContent.length + charsToAdd, content.length);
           return content.substring(0, endIndex);
         });
+
+        // 每次内容更新后滚动到底部
+        scrollToBottom();
       }, 15); // 稍微延迟，使效果看起来更自然
 
       return () => clearTimeout(timer);
@@ -68,7 +91,7 @@ const TypeWriter: React.FC<{ content: string; isLoading: boolean }> = ({ content
 
       return () => clearInterval(cursorTimer);
     }
-  }, [content, displayedContent, isLoading]);
+  }, [content, displayedContent, isLoading, scrollToBottom]);
 
   return (
     <div className="whitespace-pre-wrap text-sm leading-relaxed">
@@ -89,10 +112,28 @@ const examplePrompts = [
 
 export default function Chat() {
   const [token, setToken] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isFirstResponse, setIsFirstResponse] = useState(true);
+  const [tempMessages, setTempMessages] = useState<Message[]>([]);
+
+  // 滚动到底部的函数
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    requestAnimationFrame(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior });
+    });
+  }, []);
 
   // Get token on component mount (client-side only)
   useEffect(() => {
     setToken(localStorage.getItem('token'));
+
+    // 页面首次加载时自动聚焦输入框
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 300); // 使用稍长的延迟确保组件完全渲染
   }, []);
 
   const {
@@ -114,20 +155,86 @@ export default function Chat() {
         console.error('流式响应错误:', response.status, response.statusText);
       }
     },
+    onFinish: () => {
+      // 对话完成时清除临时消息
+      setTempMessages([]);
+      setIsFirstResponse(true);
+    },
   });
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const [copied, setCopied] = useState<string | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const isLoading = status === 'streaming' || status === 'submitted';
 
-  // Auto scroll to bottom
+  // 合并实际消息和临时消息
+  const allMessages = useMemo(() => {
+    if (tempMessages.length === 0 || messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
+      return messages;
+    }
+    return [...messages, ...tempMessages];
+  }, [messages, tempMessages]);
+
+  // 提交表单的增强版处理函数
+  const handleEnhancedSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+
+    // 立即添加临时"思考中"消息
+    if (input.trim()) {
+      const tempAssistantMessage: Message = {
+        id: `temp-${Date.now()}`,
+        content: '$$loading$$', // 使用特殊标记，代表这是一个加载状态
+        role: 'assistant',
+      };
+
+      setTempMessages([tempAssistantMessage]);
+      setIsFirstResponse(true);
+
+      // 调用原始提交函数
+      handleSubmit(e);
+
+      // 重置输入框高度
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto';
+        }
+      }, 0);
+    }
+  }, [input, handleSubmit]);
+
+  // 检测实际AI响应开始，移除临时消息
   useEffect(() => {
-    requestAnimationFrame(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    });
-  }, [messages]);
+    if (isLoading && messages.length > 0 && messages[messages.length - 1].role === 'assistant' && isFirstResponse) {
+      setTempMessages([]);
+      setIsFirstResponse(false);
+    }
+  }, [isLoading, messages, isFirstResponse]);
+
+  // Auto scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+
+  // 在流式输出过程中持续滚动到底部
+  useEffect(() => {
+    if (!isLoading) return;
+
+    // 当有流式输出时，每200毫秒检查并滚动一次
+    const intervalId = setInterval(() => {
+      scrollToBottom('auto'); // 使用'auto'减少平滑滚动带来的视觉延迟
+    }, 200);
+
+    return () => clearInterval(intervalId);
+  }, [isLoading, scrollToBottom]);
+
+  // 对话完成后自动聚焦输入框
+  useEffect(() => {
+    // 当状态从加载变为非加载状态时，自动聚焦
+    if (!isLoading && (status === 'ready' || status === 'error') && messages.length > 0) {
+      // 短暂延迟确保UI已更新
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 100);
+    }
+  }, [status, isLoading, messages.length]);
 
   // Adjust textarea height based on content
   useEffect(() => {
@@ -149,17 +256,6 @@ export default function Chat() {
     setInput(prompt);
     textareaRef.current?.focus();
   };
-
-  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-    handleSubmit(e);
-    setTimeout(() => {
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-      }
-    }, 0);
-  }
 
   return (
     <div className="h-full flex flex-col bg-white rounded-xl overflow-hidden">
@@ -207,7 +303,7 @@ export default function Chat() {
         ) : (
           // Chat View
           <div className="max-w-3xl mx-auto space-y-6 pt-6 pb-10 px-4">
-            {messages.map(message => (
+            {allMessages.map(message => (
               <div
                 key={message.id}
                 className={cn(
@@ -227,10 +323,18 @@ export default function Chat() {
                   "px-4 py-3 rounded-lg max-w-[85%] relative group",
                   message.role === 'user'
                     ? "bg-primary text-primary-foreground"
-                    : "bg-gray-100"
+                    : message.content === '$$loading$$' ? "" : "bg-gray-100"
                 )}>
                   {message.role === 'assistant' ? (
-                    <TypeWriter content={message.content} isLoading={isLoading && messages[messages.length - 1].id === message.id} />
+                    message.content === '$$loading$$' ? (
+                      <ThreeDotsLoadingIndicator />
+                    ) : (
+                      <TypeWriter
+                        content={message.content}
+                        isLoading={isLoading && messages[messages.length - 1].id === message.id}
+                        scrollToBottom={scrollToBottom}
+                      />
+                    )
                   ) : (
                     <div className="whitespace-pre-wrap text-sm leading-relaxed">
                       {message.content}
@@ -269,7 +373,7 @@ export default function Chat() {
       <div className="p-4 border-t bg-white flex-shrink-0">
         <form
           id="chat-form"
-          onSubmit={handleFormSubmit}
+          onSubmit={handleEnhancedSubmit}
           className="max-w-3xl mx-auto relative flex items-end gap-2"
         >
           <Button variant="ghost" size="icon" className="flex-shrink-0 mb-1" type="button">
@@ -288,7 +392,7 @@ export default function Chat() {
                 e.preventDefault();
                 const form = e.currentTarget.closest('form');
                 if (form && input.trim()) {
-                  handleFormSubmit(new Event('submit', { bubbles: true, cancelable: true }) as unknown as React.FormEvent<HTMLFormElement>);
+                  handleEnhancedSubmit(new Event('submit', { bubbles: true, cancelable: true }) as unknown as React.FormEvent<HTMLFormElement>);
                 }
               }
             }}
