@@ -1,16 +1,17 @@
-import { format, parseISO } from "date-fns";
-import { zhCN } from "date-fns/locale";
+import dayjs from "dayjs";
+import "dayjs/locale/zh-cn";
+
+dayjs.locale("zh-cn");
 
 export function formatDate(
   date: string | Date,
-  formatStr: string = "yyyy-MM-dd"
+  formatStr: string = "YYYY/MM/DD"
 ): string {
-  const dateObj = typeof date === "string" ? parseISO(date) : date;
-  return format(dateObj, formatStr, { locale: zhCN });
+  return dayjs(date).format(formatStr);
 }
 
 export function formatDateTime(date: string | Date): string {
-  return formatDate(date, "yyyy-MM-dd HH:mm");
+  return dayjs(date).format("YYYY/MM/DD HH:mm");
 }
 
 export function formatDateRange(
@@ -21,64 +22,42 @@ export function formatDateRange(
 }
 
 export function getRelativeTime(date: string | Date): string {
-  const now = new Date();
-  const dateObj = typeof date === "string" ? parseISO(date) : date;
-  const diff = now.getTime() - dateObj.getTime();
+  const now = dayjs();
+  const dateObj = dayjs(date);
+  const diff = now.diff(dateObj, "minute");
 
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-
-  if (days > 0) {
-    return `${days}天前`;
+  if (diff < 1) {
+    return "刚刚";
   }
-  if (hours > 0) {
-    return `${hours}小时前`;
+  if (diff < 60) {
+    return `${diff}分钟前`;
   }
-  if (minutes > 0) {
-    return `${minutes}分钟前`;
+  if (diff < 1440) {
+    return `${Math.floor(diff / 60)}小时前`;
   }
-  return "刚刚";
+  return `${Math.floor(diff / 1440)}天前`;
 }
 
 export function isToday(date: string | Date): boolean {
-  const today = new Date();
-  const dateObj = typeof date === "string" ? parseISO(date) : date;
-  return (
-    dateObj.getDate() === today.getDate() &&
-    dateObj.getMonth() === today.getMonth() &&
-    dateObj.getFullYear() === today.getFullYear()
-  );
+  return dayjs(date).isSame(dayjs(), "day");
 }
 
 export function isPast(date: string | Date): boolean {
-  const now = new Date();
-  const dateObj = typeof date === "string" ? parseISO(date) : date;
-  return dateObj < now;
+  return dayjs(date).isBefore(dayjs());
 }
 
 export function isFuture(date: string | Date): boolean {
-  return !isPast(date);
+  return dayjs(date).isAfter(dayjs());
 }
 
 export function addDays(date: string | Date, days: number): Date {
-  const dateObj = typeof date === "string" ? parseISO(date) : date;
-  const result = new Date(dateObj);
-  result.setDate(result.getDate() + days);
-  return result;
+  return dayjs(date).add(days, "day").toDate();
 }
 
 export function getStartOfDay(date: string | Date): Date {
-  const dateObj = typeof date === "string" ? parseISO(date) : date;
-  const result = new Date(dateObj);
-  result.setHours(0, 0, 0, 0);
-  return result;
+  return dayjs(date).startOf("day").toDate();
 }
 
 export function getEndOfDay(date: string | Date): Date {
-  const dateObj = typeof date === "string" ? parseISO(date) : date;
-  const result = new Date(dateObj);
-  result.setHours(23, 59, 59, 999);
-  return result;
+  return dayjs(date).endOf("day").toDate();
 }

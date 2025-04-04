@@ -21,6 +21,7 @@ import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { api } from "@/lib/api";
 import { Opportunity, FollowUpRecord } from "@/types/opportunity";
+import dayjs from 'dayjs';
 
 export default function OpportunityDetailPage() {
   const params = useParams();
@@ -205,7 +206,7 @@ export default function OpportunityDetailPage() {
                         <div>
                           <h4 className="font-medium">{record.creator}</h4>
                           <p className="text-sm text-gray-500">
-                            {format(new Date(record.createTime), 'yyyy-MM-dd HH:mm', { locale: zhCN })}
+                            {dayjs(record.createTime).format('YYYY/MM/DD HH:mm')}
                           </p>
                         </div>
                         <Badge>{record.type}</Badge>

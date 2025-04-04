@@ -13,8 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
+import dayjs from 'dayjs';
 import { Bell, CheckSquare, Clock, Users, ShoppingCart } from 'lucide-react';
 
 interface DashboardData {
@@ -108,7 +107,7 @@ export default function DashboardPage() {
                     <TableCell>
                       <Badge>{order.status}</Badge>
                     </TableCell>
-                    <TableCell>{format(new Date(order.createdAt), 'yyyy-MM-dd HH:mm', { locale: zhCN })}</TableCell>
+                    <TableCell>{dayjs(order.createdAt).format('YYYY/MM/DD HH:mm')}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -132,7 +131,7 @@ export default function DashboardPage() {
                   <TableRow key={customer.id}>
                     <TableCell>{customer.name}</TableCell>
                     <TableCell>{customer.contact}</TableCell>
-                    <TableCell>{format(new Date(customer.createdAt), 'yyyy-MM-dd HH:mm', { locale: zhCN })}</TableCell>
+                    <TableCell>{dayjs(customer.createdAt).format('YYYY/MM/DD HH:mm')}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
