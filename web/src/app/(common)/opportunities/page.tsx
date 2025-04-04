@@ -41,7 +41,7 @@ export default function OpportunitiesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -184,55 +184,55 @@ export default function OpportunitiesPage() {
             </Button>
           </div>
 
-          <Table className="border rounded-lg overflow-hidden">
+          <Table className="border-0" compact>
             <TableHeader>
-              <TableRow className="border-b">
-                <TableHead className="py-2">公司名称</TableHead>
-                <TableHead className="py-2">网站</TableHead>
-                <TableHead className="py-2">联系人</TableHead>
-                <TableHead className="py-2">联系电话</TableHead>
-                <TableHead className="py-2">微信</TableHead>
-                <TableHead className="py-2">部门</TableHead>
-                <TableHead className="py-2">职位</TableHead>
-                <TableHead className="py-2">公司规模</TableHead>
-                <TableHead className="py-2">地区</TableHead>
-                <TableHead className="py-2">行业</TableHead>
-                <TableHead className="py-2">进度</TableHead>
-                <TableHead className="py-2">状态</TableHead>
-                <TableHead className="py-2">预期金额</TableHead>
-                <TableHead className="py-2">优先级</TableHead>
-                <TableHead className="py-2">来源</TableHead>
-                <TableHead className="py-2">预计成交日期</TableHead>
-                <TableHead className="py-2">创建时间</TableHead>
-                <TableHead className="py-2">更新时间</TableHead>
-                <TableHead className="py-2">操作</TableHead>
+              <TableRow>
+                <TableHead>公司名称</TableHead>
+                <TableHead>网站</TableHead>
+                <TableHead>联系人</TableHead>
+                <TableHead>联系电话</TableHead>
+                <TableHead>微信</TableHead>
+                <TableHead>部门</TableHead>
+                <TableHead>职位</TableHead>
+                <TableHead>公司规模</TableHead>
+                <TableHead>地区</TableHead>
+                <TableHead>行业</TableHead>
+                <TableHead>进度</TableHead>
+                <TableHead>状态</TableHead>
+                <TableHead>预期金额</TableHead>
+                <TableHead>优先级</TableHead>
+                <TableHead>来源</TableHead>
+                <TableHead>预计成交日期</TableHead>
+                <TableHead>创建时间</TableHead>
+                <TableHead>更新时间</TableHead>
+                <TableHead>操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredOpportunities.map((opp) => (
                 <TableRow
                   key={opp.id}
-                  className={`border-b ${selectedOpportunity && opp.id === selectedOpportunity.id ? 'bg-blue-100' : ''}`}
+                  data-state={selectedOpportunity && opp.id === selectedOpportunity.id ? 'selected' : undefined}
                 >
-                  <TableCell className="py-2">{opp.companyName}</TableCell>
-                  <TableCell className="py-2">{opp.website}</TableCell>
-                  <TableCell className="py-2">{opp.contactPerson}</TableCell>
-                  <TableCell className="py-2">{opp.contactPhone}</TableCell>
-                  <TableCell className="py-2">{opp.contactWechat}</TableCell>
-                  <TableCell className="py-2">{opp.contactDepartment}</TableCell>
-                  <TableCell className="py-2">{opp.contactPosition}</TableCell>
-                  <TableCell className="py-2">{opp.companySize}</TableCell>
-                  <TableCell className="py-2">{opp.region}</TableCell>
-                  <TableCell className="py-2">{opp.industry}</TableCell>
-                  <TableCell className="py-2">{getStatusBadge(opp.progress)}</TableCell>
-                  <TableCell className="py-2">{getStatusBadge(opp.status)}</TableCell>
-                  <TableCell className="py-2">¥{parseFloat(opp.expectedAmount).toLocaleString()}</TableCell>
-                  <TableCell className="py-2">{getPriorityBadge(opp.priority)}</TableCell>
-                  <TableCell className="py-2">{opp.source}</TableCell>
-                  <TableCell className="py-2">{opp.expectedCloseDate ? dayjs(opp.expectedCloseDate).format('YYYY/MM/DD') : '-'}</TableCell>
-                  <TableCell className="py-2">{dayjs(opp.createdAt).format('YYYY/MM/DD HH:mm')}</TableCell>
-                  <TableCell className="py-2">{dayjs(opp.updatedAt).format('YYYY/MM/DD HH:mm')}</TableCell>
-                  <TableCell className="py-2">
+                  <TableCell>{opp.companyName}</TableCell>
+                  <TableCell>{opp.website}</TableCell>
+                  <TableCell>{opp.contactPerson}</TableCell>
+                  <TableCell>{opp.contactPhone}</TableCell>
+                  <TableCell>{opp.contactWechat}</TableCell>
+                  <TableCell>{opp.contactDepartment}</TableCell>
+                  <TableCell>{opp.contactPosition}</TableCell>
+                  <TableCell>{opp.companySize}</TableCell>
+                  <TableCell>{opp.region}</TableCell>
+                  <TableCell>{opp.industry}</TableCell>
+                  <TableCell>{getStatusBadge(opp.progress)}</TableCell>
+                  <TableCell>{getStatusBadge(opp.status)}</TableCell>
+                  <TableCell>{opp.expectedAmount && !isNaN(parseFloat(opp.expectedAmount)) ? `¥${parseFloat(opp.expectedAmount).toLocaleString()}` : '-'}</TableCell>
+                  <TableCell>{getPriorityBadge(opp.priority)}</TableCell>
+                  <TableCell>{opp.source}</TableCell>
+                  <TableCell>{opp.expectedCloseDate ? dayjs(opp.expectedCloseDate).format('YYYY/MM/DD') : '-'}</TableCell>
+                  <TableCell>{dayjs(opp.createdAt).format('YYYY/MM/DD HH:mm')}</TableCell>
+                  <TableCell>{dayjs(opp.updatedAt).format('YYYY/MM/DD HH:mm')}</TableCell>
+                  <TableCell>
                     <Button variant="ghost" size="sm" onClick={() => handleViewDetails(opp)}>
                       <Eye className="h-4 w-4 mr-1" /> 查看
                     </Button>
@@ -248,6 +248,14 @@ export default function OpportunitiesPage() {
             isOpen={isDrawerOpen}
             onOpenChange={setIsDrawerOpen}
             onClose={handleDrawerClose}
+            onUpdate={(updatedOpportunity) => {
+              // 更新表格中的数据
+              setOpportunities(opportunities.map(opp =>
+                opp.id === updatedOpportunity.id ? updatedOpportunity : opp
+              ));
+              // 更新选中的商机
+              setSelectedOpportunity(updatedOpportunity);
+            }}
           />
 
           <div className="flex items-center justify-between mt-4">

@@ -7,6 +7,7 @@
 /* @import "./themes.css"; */
 
 :root {
+  -webkit-font-smoothing: antialiased;
   --radius: 0.425rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);

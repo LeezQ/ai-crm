@@ -96,7 +96,7 @@ export default function MainLayout({
             <span className="font-semibold text-lg">AI CRM</span>
           </div>
         </div>
-        <nav className="flex-1 overflow-y-auto py-4">
+        <nav className="flex-1 overflow-y-auto py-6">
           {menuItems.map((item) => {
             const isActive = pathname.startsWith(item.href);
             return (
@@ -104,7 +104,7 @@ export default function MainLayout({
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors mx-2 rounded-md',
+                  'flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors mx-2 rounded-md mb-1',
                   isActive
                     ? 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white'
                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white'
