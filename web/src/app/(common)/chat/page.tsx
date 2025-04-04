@@ -20,6 +20,66 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+// 添加字符级打字效果组件
+const TypeWriter: React.FC<{ content: string; isLoading: boolean }> = ({ content, isLoading }) => {
+  const [displayedContent, setDisplayedContent] = useState('');
+  const contentRef = useRef(content);
+  const indexRef = useRef(0);
+  const [showCursor, setShowCursor] = useState(true);
+
+  // 当内容更新时更新引用
+  useEffect(() => {
+    contentRef.current = content;
+  }, [content]);
+
+  // 当新消息开始时，重置打字效果
+  useEffect(() => {
+    if (isLoading && indexRef.current === 0) {
+      setDisplayedContent('');
+    }
+  }, [isLoading]);
+
+  // 打字效果逻辑
+  useEffect(() => {
+    // 如果正在加载中，且显示内容长度小于实际内容，则继续添加字符
+    if ((isLoading || displayedContent.length < content.length) &&
+      displayedContent.length < content.length) {
+      const timer = setTimeout(() => {
+        setDisplayedContent(prevContent => {
+          // 计算要添加的字符数量，根据加载状态和内容长度动态调整
+          let charsToAdd = 1;
+          if (content.length - prevContent.length > 20) {
+            // 如果剩余内容较多，一次添加更多字符
+            charsToAdd = Math.min(5, content.length - prevContent.length);
+          }
+
+          // 确保不会超出内容长度
+          const endIndex = Math.min(prevContent.length + charsToAdd, content.length);
+          return content.substring(0, endIndex);
+        });
+      }, 15); // 稍微延迟，使效果看起来更自然
+
+      return () => clearTimeout(timer);
+    } else if (displayedContent.length >= content.length && isLoading) {
+      // 如果已经显示完所有内容但仍在加载，闪烁光标
+      const cursorTimer = setInterval(() => {
+        setShowCursor(prev => !prev);
+      }, 500);
+
+      return () => clearInterval(cursorTimer);
+    }
+  }, [content, displayedContent, isLoading]);
+
+  return (
+    <div className="whitespace-pre-wrap text-sm leading-relaxed">
+      {displayedContent}
+      {isLoading && displayedContent.length >= content.length && showCursor && (
+        <span className="inline-block w-1.5 h-4 ml-0.5 bg-primary animate-pulse"></span>
+      )}
+    </div>
+  );
+};
+
 const examplePrompts = [
   'How does AI work?',
   'Are black holes real?',
@@ -46,8 +106,14 @@ export default function Chat() {
     status,
   } = useChat({
     api: '/api/ai/chat',
-    experimental_throttle: 1,
     headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+    experimental_throttle: 0, // 设为0使更新频率最大化，让流式输出更平滑
+    onResponse: (response) => {
+      // 用于调试流式响应
+      if (!response.ok) {
+        console.error('流式响应错误:', response.status, response.statusText);
+      }
+    },
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -158,9 +224,13 @@ export default function Chat() {
                     ? "bg-primary text-primary-foreground"
                     : "bg-gray-100"
                 )}>
-                  <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                    {message.content}
-                  </div>
+                  {message.role === 'assistant' ? (
+                    <TypeWriter content={message.content} isLoading={isLoading && messages[messages.length - 1].id === message.id} />
+                  ) : (
+                    <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                      {message.content}
+                    </div>
+                  )}
                   {message.role === 'assistant' && !isLoading && (
                     <Button
                       variant="ghost"
