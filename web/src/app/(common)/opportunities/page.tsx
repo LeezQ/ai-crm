@@ -21,10 +21,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Download, ChevronLeft, ChevronRight, Loader2, Eye } from 'lucide-react';
+import { Plus, Download, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import dayjs from 'dayjs';
 import OpportunityDetailDrawer from './components/opportunity-detail-drawer';
+import { getStatusBadge, getPriorityBadge } from './components/status-badges';
 
 interface OpportunitiesResponse {
   items: Opportunity[];
@@ -81,31 +82,6 @@ export default function OpportunitiesPage() {
     setTimeout(() => {
       setSelectedOpportunity(null);
     }, 300);
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusMap = {
-      new: { label: '新建', color: 'bg-blue-500' },
-      following: { label: '跟进中', color: 'bg-yellow-500' },
-      negotiating: { label: '谈判中', color: 'bg-orange-500' },
-      closed: { label: '已成交', color: 'bg-green-500' },
-      failed: { label: '已失败', color: 'bg-red-500' },
-      active: { label: '活跃', color: 'bg-teal-500' },
-      initial: { label: '初始', color: 'bg-gray-400' },
-    };
-    const statusInfo = statusMap[status as keyof typeof statusMap] || { label: '未知', color: 'bg-gray-500' };
-    return <Badge className={`${statusInfo.color} text-white`}>{statusInfo.label}</Badge>;
-  };
-
-  const getPriorityBadge = (priority: string) => {
-    const priorityMap = {
-      high: { label: '高', color: 'bg-red-500' },
-      medium: { label: '中', color: 'bg-yellow-500' },
-      low: { label: '低', color: 'bg-green-500' },
-      normal: { label: '普通', color: 'bg-blue-500' },
-    };
-    const priorityInfo = priorityMap[priority as keyof typeof priorityMap] || { label: '未知', color: 'bg-gray-500' };
-    return <Badge className={`${priorityInfo.color} text-white`}>{priorityInfo.label}</Badge>;
   };
 
   const filteredOpportunities = opportunities.filter((opp) => {
@@ -233,8 +209,8 @@ export default function OpportunitiesPage() {
                   <TableCell>{dayjs(opp.createdAt).format('YYYY/MM/DD HH:mm')}</TableCell>
                   <TableCell>{dayjs(opp.updatedAt).format('YYYY/MM/DD HH:mm')}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm" onClick={() => handleViewDetails(opp)}>
-                      <Eye className="h-4 w-4 mr-1" /> 查看
+                    <Button variant="link" size="sm" onClick={() => handleViewDetails(opp)} className="text-primary font-medium underline-offset-4 hover:underline p-0">
+                      查看
                     </Button>
                   </TableCell>
                 </TableRow>

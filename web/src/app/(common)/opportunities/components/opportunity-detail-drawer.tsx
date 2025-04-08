@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { getStatusBadge, getPriorityBadge, statuses, priorities } from "./status-badges";
 
 interface OpportunityDetailDrawerProps {
   opportunity: Opportunity | null;
@@ -161,48 +162,6 @@ export default function OpportunityDetailDrawer({
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-
-  const getStatusBadge = (status: string) => {
-    const statusMap = {
-      new: { label: '新建', color: 'bg-blue-500' },
-      following: { label: '跟进中', color: 'bg-yellow-500' },
-      negotiating: { label: '谈判中', color: 'bg-orange-500' },
-      closed: { label: '已成交', color: 'bg-green-500' },
-      failed: { label: '已失败', color: 'bg-red-500' },
-      active: { label: '活跃', color: 'bg-teal-500' },
-      initial: { label: '初始', color: 'bg-gray-400' },
-    };
-    const statusInfo = statusMap[status as keyof typeof statusMap] || { label: '未知', color: 'bg-gray-500' };
-    return <Badge className={`${statusInfo.color} text-white`}>{statusInfo.label}</Badge>;
-  };
-
-  const getPriorityBadge = (priority: string) => {
-    const priorityMap = {
-      high: { label: '高', color: 'bg-red-500' },
-      medium: { label: '中', color: 'bg-yellow-500' },
-      low: { label: '低', color: 'bg-green-500' },
-      normal: { label: '普通', color: 'bg-blue-500' },
-    };
-    const priorityInfo = priorityMap[priority as keyof typeof priorityMap] || { label: '未知', color: 'bg-gray-500' };
-    return <Badge className={`${priorityInfo.color} text-white`}>{priorityInfo.label}</Badge>;
-  };
-
-  const statuses = [
-    { value: 'new', label: '新建' },
-    { value: 'following', label: '跟进中' },
-    { value: 'negotiating', label: '谈判中' },
-    { value: 'closed', label: '已成交' },
-    { value: 'failed', label: '已失败' },
-    { value: 'active', label: '活跃' },
-    { value: 'initial', label: '初始' },
-  ];
-
-  const priorities = [
-    { value: 'high', label: '高' },
-    { value: 'medium', label: '中' },
-    { value: 'low', label: '低' },
-    { value: 'normal', label: '普通' },
-  ];
 
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange} direction="right">
