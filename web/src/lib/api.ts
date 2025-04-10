@@ -25,13 +25,27 @@ instance.interceptors.request.use((config) => {
   return config;
 });
 
+// 401 错误处理函数
+const handleAuthError = () => {
+  // 清除登录凭证
+  localStorage.removeItem("token");
+  localStorage.removeItem("teamId");
+
+  // 如果在客户端环境，则重定向到登录页
+  if (typeof window !== "undefined") {
+    window.location.href = "/login";
+  }
+
+  throw new AuthenticationError("登录已过期，请重新登录");
+};
+
 // 响应拦截器
 instance.interceptors.response.use(
   (response) => response.data,
   (error) => {
     if (error.response) {
       if (error.response.status === 401) {
-        throw new AuthenticationError();
+        return handleAuthError();
       }
       throw new ServerError(error.response.data?.message || "请求失败");
     }
