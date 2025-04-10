@@ -170,11 +170,9 @@ export default function TeamsPage() {
                   <TableCell>{team.admin}</TableCell>
                   <TableCell>{new Date(team.createTime).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-center">
                       <Link href={`/teams/${team.id}`}>
-                        <Button variant="ghost" size="sm">
-                          <Users className="h-4 w-4" />
-                        </Button>
+                        查看成员
                       </Link>
                       <Button variant="ghost" size="sm">
                         <MoreVertical className="h-4 w-4" />

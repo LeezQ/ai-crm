@@ -41,3 +41,27 @@ export const getPriorityBadge = (priority: string) => {
   const priorityInfo = priorityMap[priority as keyof typeof priorityMap] || { label: '未知', color: 'bg-gray-100 text-gray-800' };
   return <Badge className={`${priorityInfo.color} rounded-full font-medium border-0`}>{priorityInfo.label}</Badge>;
 };
+
+// 为了兼容旧代码，保留获取颜色类名的函数
+export const getStatusColor = (status: string) => {
+  const statusColorMap = {
+    new: 'bg-blue-500',
+    following: 'bg-purple-500',
+    negotiating: 'bg-yellow-500',
+    closed: 'bg-green-500',
+    failed: 'bg-red-500',
+    active: 'bg-teal-500',
+    initial: 'bg-gray-500',
+  };
+  return statusColorMap[status as keyof typeof statusColorMap] || 'bg-gray-500';
+};
+
+export const getPriorityColor = (priority: string) => {
+  const priorityColorMap = {
+    high: 'bg-red-500',
+    medium: 'bg-yellow-500',
+    low: 'bg-blue-500',
+    normal: 'bg-gray-500',
+  };
+  return priorityColorMap[priority as keyof typeof priorityColorMap] || 'bg-gray-500';
+};

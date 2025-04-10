@@ -24,7 +24,7 @@ import { Plus, Download, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react
 import Link from 'next/link';
 import dayjs from 'dayjs';
 import OpportunityDetailDrawer from './components/opportunity-detail-drawer';
-import { getStatusBadge, getPriorityBadge } from './components/status-badges';
+import { getStatusBadge, getPriorityBadge } from "@/components/ui/status-badges";
 
 interface OpportunitiesResponse {
   items: Opportunity[];

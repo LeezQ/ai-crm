@@ -121,6 +121,11 @@ export const api = {
         method: "PUT",
         data,
       }),
+    updateStatus: (id: string, data: { status: Opportunity["status"] }) =>
+      request(`/api/opportunities/${id}/status`, {
+        method: "PUT",
+        data,
+      }),
     delete: (id: string) =>
       request(`/api/opportunities/${id}`, {
         method: "DELETE",
@@ -187,7 +192,22 @@ export const api = {
 
   // 统计分析
   analytics: {
-    dashboard: () => request("/api/analytics/dashboard"),
+    dashboard: () =>
+      request<{
+        totalOpportunities: number;
+        statusCounts: Array<{
+          status: string;
+          count: number;
+        }>;
+        recentOpportunities: Array<{
+          id: number;
+          companyName: string;
+          contactPerson: string;
+          status: string;
+          priority: string;
+          createdAt: string;
+        }>;
+      }>("/api/dashboard"),
     opportunities: (params?: Record<string, string>) =>
       request("/api/analytics/opportunities", { params }),
     teams: (params?: Record<string, string>) =>

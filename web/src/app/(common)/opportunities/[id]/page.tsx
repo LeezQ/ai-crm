@@ -22,6 +22,7 @@ import { zhCN } from 'date-fns/locale';
 import { api } from "@/lib/api";
 import { Opportunity, FollowUpRecord } from "@/types/opportunity";
 import dayjs from 'dayjs';
+import { getStatusBadge, getPriorityBadge } from "@/components/ui/status-badges";
 
 export default function OpportunityDetailPage() {
   const params = useParams();
@@ -97,14 +98,10 @@ export default function OpportunityDetailPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>{opportunity.customerName}</CardTitle>
+            <CardTitle>{opportunity.companyName}</CardTitle>
             <div className="flex gap-2 mt-2">
-              <Badge className={opportunity.status === 'closed' ? 'bg-green-500' : 'bg-blue-500'}>
-                {opportunity.status === 'closed' ? '已成交' : '进行中'}
-              </Badge>
-              <Badge className={opportunity.priority === 'high' ? 'bg-red-500' : 'bg-yellow-500'}>
-                {opportunity.priority === 'high' ? '高优先级' : '中优先级'}
-              </Badge>
+              {getStatusBadge(opportunity.status)}
+              {getPriorityBadge(opportunity.priority)}
             </div>
           </div>
           <div className="flex gap-2">
@@ -131,11 +128,11 @@ export default function OpportunityDetailPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>联系邮箱</Label>
-                  <Input value={opportunity.contactEmail} readOnly />
+                  <Input value={opportunity.contactWechat} readOnly />
                 </div>
                 <div className="space-y-2">
                   <Label>预期金额</Label>
-                  <Input value={`¥${opportunity.expectedAmount.toLocaleString()}`} readOnly />
+                  <Input value={opportunity.expectedAmount ? `¥${opportunity.expectedAmount}` : '-'} readOnly />
                 </div>
                 <div className="space-y-2">
                   <Label>来源渠道</Label>
@@ -168,6 +165,10 @@ export default function OpportunityDetailPage() {
                           <SelectItem value="call">电话</SelectItem>
                           <SelectItem value="meeting">会议</SelectItem>
                           <SelectItem value="email">邮件</SelectItem>
+                          <SelectItem value="visit">拜访</SelectItem>
+                          <SelectItem value="wechat">微信</SelectItem>
+                          <SelectItem value="demo">演示</SelectItem>
+                          <SelectItem value="proposal">方案</SelectItem>
                           <SelectItem value="other">其他</SelectItem>
                         </SelectContent>
                       </Select>
@@ -230,14 +231,14 @@ export default function OpportunityDetailPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-medium">所属团队</h3>
-                    <p className="text-sm text-gray-500">{opportunity.team}</p>
+                    <p className="text-sm text-gray-500">Team {opportunity.teamId}</p>
                   </div>
                   <Button variant="outline">转移团队</Button>
                 </div>
                 <div>
                   <h3 className="font-medium mb-2">团队成员</h3>
                   <div className="flex gap-2">
-                    <Badge>{opportunity.owner}</Badge>
+                    <Badge>ID: {opportunity.ownerId}</Badge>
                     {/* 这里可以添加更多团队成员 */}
                   </div>
                 </div>

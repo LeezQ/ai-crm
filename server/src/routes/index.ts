@@ -4,6 +4,7 @@ import { opportunityRoutes } from "../controllers/opportunity";
 import { teamRoutes } from "../controllers/team";
 import { teamMemberRoutes } from "../controllers/teamMember";
 import { streamData } from "../controllers/chat.controller";
+import { getDashboardData } from "../controllers/dashboard";
 const app = new Hono();
 
 // 用户相关路由
@@ -36,5 +37,8 @@ app.post("/api/opportunities/:id/follow-ups", opportunityRoutes.createFollowUp);
 
 // 聊天相关路由
 app.post("/api/ai/chat", streamData);
+
+// Dashboard routes
+app.get("/api/dashboard", getDashboardData);
 
 export const routes = app;

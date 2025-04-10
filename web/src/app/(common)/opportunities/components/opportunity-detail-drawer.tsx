@@ -26,12 +26,12 @@ import {
 } from "@/components/ui/select";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { getStatusBadge, getPriorityBadge, statuses, priorities } from "./status-badges";
 import { FollowUpRecord } from "@/types/opportunity";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { CalendarDays, Phone, Mail, MessageSquare, Plus } from "lucide-react";
+import { getPriorityBadge, getStatusBadge, priorities, statuses } from "@/components/ui/status-badges";
 
 interface OpportunityDetailDrawerProps {
   opportunity: Opportunity | null;
