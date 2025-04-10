@@ -1,9 +1,5 @@
 import { Hono } from "hono";
 import { login, getProfile, register } from "../controllers/user.controller";
-import {
-  getFollowUps,
-  createFollowUp,
-} from "../controllers/follow-up.controller";
 import { opportunityRoutes } from "../controllers/opportunity";
 import { teamRoutes } from "../controllers/team";
 import { teamMemberRoutes } from "../controllers/teamMember";
@@ -35,8 +31,8 @@ app.put("/api/opportunities/:id", opportunityRoutes.update);
 app.delete("/api/opportunities/:id", opportunityRoutes.delete);
 
 // 跟进相关路由
-app.get("/api/opportunities/:id/follow-ups", getFollowUps);
-app.post("/api/opportunities/:id/follow-ups", createFollowUp);
+app.get("/api/opportunities/:id/follow-ups", opportunityRoutes.getFollowUps);
+app.post("/api/opportunities/:id/follow-ups", opportunityRoutes.createFollowUp);
 
 // 聊天相关路由
 app.post("/api/ai/chat", streamData);

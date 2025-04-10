@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { opportunities, users, teamMembers } from "../db/schema";
+import { opportunities, users, teamMembers, followUps } from "../db/schema";
 import { eq, sql, desc, and } from "drizzle-orm";
 import { Context } from "hono";
 import { User } from "../utils/jwt";
@@ -263,6 +263,72 @@ export const opportunityRoutes = {
     } catch (error) {
       console.error(error);
       return c.json({ error: "删除商机失败" }, 500);
+    }
+  },
+
+  getFollowUps: async (c: Context) => {
+    try {
+      const id = c.req.param("id");
+
+      const followUpRecords = await db
+        .select({
+          id: followUps.id,
+          type: followUps.type,
+          content: followUps.content,
+          result: followUps.result,
+          nextPlan: followUps.nextPlan,
+          creator: users.name,
+          createTime: followUps.createdAt,
+        })
+        .from(followUps)
+        .leftJoin(users, eq(followUps.creatorId, users.id))
+        .where(eq(followUps.opportunityId, parseInt(id)))
+        .orderBy(desc(followUps.createdAt));
+
+      return c.json(followUpRecords);
+    } catch (error) {
+      console.error(error);
+      return c.json({ error: "获取跟进记录失败" }, 500);
+    }
+  },
+
+  createFollowUp: async (c: Context) => {
+    try {
+      const id = c.req.param("id");
+      const user = c.get("user") as User;
+      const data = await c.req.json();
+
+      const [newFollowUp] = await db
+        .insert(followUps)
+        .values({
+          opportunityId: parseInt(id),
+          type: data.type,
+          content: data.content,
+          result: data.result || "",
+          nextPlan: data.nextPlan || "",
+          creatorId: user.id,
+        })
+        .returning();
+
+      // 获取创建者信息以返回完整记录
+      const [record] = await db
+        .select({
+          id: followUps.id,
+          type: followUps.type,
+          content: followUps.content,
+          result: followUps.result,
+          nextPlan: followUps.nextPlan,
+          creator: users.name,
+          createTime: followUps.createdAt,
+        })
+        .from(followUps)
+        .leftJoin(users, eq(followUps.creatorId, users.id))
+        .where(eq(followUps.id, newFollowUp.id));
+
+      return c.json(record);
+    } catch (error) {
+      console.error(error);
+      return c.json({ error: "创建跟进记录失败" }, 500);
     }
   },
 };
