@@ -216,3 +216,174 @@ export const getProfile = async (c: Context) => {
     return c.json({ error: "获取用户信息失败" }, 500);
   }
 };
+
+// 更新个人资料
+const updateProfileSchema = z.object({
+  name: z.string().min(2).optional(),
+  phone: z.string().optional(),
+  avatar: z.string().optional(),
+});
+
+export const updateProfile = async (c: Context) => {
+  try {
+    const userId = c.get("user").id;
+    const body = await c.req.json();
+    const { name, phone, avatar } = updateProfileSchema.parse(body);
+
+    // 构建更新对象，只更新提供的字段
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (phone !== undefined) updateData.phone = phone;
+    if (avatar !== undefined) updateData.avatar = avatar;
+
+    // 执行更新
+    const [updatedUser] = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, userId))
+      .returning({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        phone: users.phone,
+        avatar: users.avatar,
+      });
+
+    if (!updatedUser) {
+      return c.json({ success: false, message: "用户不存在" }, 404);
+    }
+
+    return c.json({
+      success: true,
+      message: "个人资料更新成功",
+      data: updatedUser,
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json(
+        {
+          success: false,
+          message: "请求参数错误",
+          errors: error.errors,
+        },
+        400
+      );
+    }
+    console.error("更新个人资料失败:", error);
+    return c.json({ success: false, message: "更新个人资料失败" }, 500);
+  }
+};
+
+// 修改密码
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(6),
+  newPassword: z.string().min(6),
+});
+
+export const changePassword = async (c: Context) => {
+  try {
+    const userId = c.get("user").id;
+    const body = await c.req.json();
+    const { currentPassword, newPassword } = changePasswordSchema.parse(body);
+
+    // 获取用户当前密码
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+      columns: {
+        password: true,
+      },
+    });
+
+    if (!user) {
+      return c.json({ success: false, message: "用户不存在" }, 404);
+    }
+
+    // 验证当前密码
+    const isValidPassword = await compare(currentPassword, user.password);
+    if (!isValidPassword) {
+      return c.json({ success: false, message: "当前密码错误" }, 400);
+    }
+
+    // 密码加密并更新
+    const hashedPassword = await hash(newPassword, 10);
+    await db
+      .update(users)
+      .set({ password: hashedPassword })
+      .where(eq(users.id, userId));
+
+    return c.json({
+      success: true,
+      message: "密码修改成功",
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json(
+        {
+          success: false,
+          message: "请求参数错误",
+          errors: error.errors,
+        },
+        400
+      );
+    }
+    console.error("修改密码失败:", error);
+    return c.json({ success: false, message: "修改密码失败" }, 500);
+  }
+};
+
+// 更新系统设置
+const updateSettingsSchema = z.object({
+  language: z.string().optional(),
+  theme: z.string().optional(),
+  notifications: z.boolean().optional(),
+});
+
+export const updateSettings = async (c: Context) => {
+  try {
+    const userId = c.get("user").id;
+    const body = await c.req.json();
+    const settings = updateSettingsSchema.parse(body);
+
+    // 用户设置存储在 users 表的 settings 字段中，假设为 JSONB 类型
+    // 获取当前设置
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+      columns: {
+        settings: true,
+      },
+    });
+
+    if (!user) {
+      return c.json({ success: false, message: "用户不存在" }, 404);
+    }
+
+    // 合并设置
+    const currentSettings = user.settings || {};
+    const newSettings = { ...currentSettings, ...settings };
+
+    // 更新设置
+    await db
+      .update(users)
+      .set({ settings: newSettings })
+      .where(eq(users.id, userId));
+
+    return c.json({
+      success: true,
+      message: "系统设置更新成功",
+      data: { settings: newSettings },
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json(
+        {
+          success: false,
+          message: "请求参数错误",
+          errors: error.errors,
+        },
+        400
+      );
+    }
+    console.error("更新系统设置失败:", error);
+    return c.json({ success: false, message: "更新系统设置失败" }, 500);
+  }
+};

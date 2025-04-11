@@ -128,15 +128,6 @@ export default function TeamsPage() {
                       onChange={(e) => setNewTeam({ ...newTeam, description: e.target.value })}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="admin">团队管理员</Label>
-                    <Input
-                      id="admin"
-                      value={newTeam.admin}
-                      onChange={(e) => setNewTeam({ ...newTeam, admin: e.target.value })}
-                      required
-                    />
-                  </div>
                   <DialogFooter>
                     <Button type="submit">创建</Button>
                   </DialogFooter>
@@ -174,9 +165,6 @@ export default function TeamsPage() {
                       <Link href={`/teams/${team.id}`}>
                         查看成员
                       </Link>
-                      <Button variant="ghost" size="sm">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>

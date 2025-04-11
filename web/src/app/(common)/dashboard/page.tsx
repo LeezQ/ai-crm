@@ -78,7 +78,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-3 gap-6">
-        <Card className="bg-slate-50 border-slate-200">
+        <Card className="bg-white border-slate-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">商机总数</CardTitle>
           </CardHeader>
@@ -86,7 +86,7 @@ export default function DashboardPage() {
             <div className="text-3xl font-bold">{data?.totalOpportunities || 0}</div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-50 border-slate-200">
+        <Card className="bg-white border-slate-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">商机状态</CardTitle>
           </CardHeader>
@@ -117,7 +117,7 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
-        <Card className="bg-slate-50 border-slate-200">
+        <Card className="bg-white border-slate-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">快速入口</CardTitle>
           </CardHeader>
@@ -128,7 +128,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <Card className="bg-slate-50 border-slate-200">
+      <Card className="bg-white border-slate-200">
         <CardHeader>
           <CardTitle>最近商机</CardTitle>
         </CardHeader>

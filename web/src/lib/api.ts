@@ -227,6 +227,41 @@ export const api = {
     teams: (params?: Record<string, string>) =>
       request("/api/analytics/teams", { params }),
   },
+
+  user: {
+    profile: async () => {
+      return request("/api/user/profile");
+    },
+    updateProfile: async (data: {
+      name?: string;
+      phone?: string;
+      avatar?: string;
+    }) => {
+      return request("/api/user/profile", {
+        method: "PATCH",
+        data,
+      });
+    },
+    changePassword: async (data: {
+      currentPassword: string;
+      newPassword: string;
+    }) => {
+      return request("/api/user/change-password", {
+        method: "POST",
+        data,
+      });
+    },
+    updateSettings: async (data: {
+      language?: string;
+      theme?: string;
+      notifications?: boolean;
+    }) => {
+      return request("/api/user/settings", {
+        method: "PATCH",
+        data,
+      });
+    },
+  },
 };
 
 // Exported interfaces matching backend structure (assuming numeric IDs)

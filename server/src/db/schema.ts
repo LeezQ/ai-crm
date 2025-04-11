@@ -7,6 +7,7 @@ import {
   integer,
   boolean,
   uniqueIndex,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
@@ -19,6 +20,7 @@ export const users = pgTable("users", {
   avatar: varchar("avatar", { length: 200 }),
   role: varchar("role", { length: 50 }).notNull().default("user"),
   status: varchar("status", { length: 50 }).notNull().default("active"),
+  settings: jsonb("settings").default({}),
   lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

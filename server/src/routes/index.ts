@@ -1,16 +1,27 @@
 import { Hono } from "hono";
-import { login, getProfile, register } from "../controllers/user.controller";
+import {
+  login,
+  getProfile,
+  register,
+  updateProfile,
+  changePassword,
+  updateSettings,
+} from "../controllers/user.controller";
 import { opportunityRoutes } from "../controllers/opportunity";
 import { teamRoutes } from "../controllers/team";
 import { teamMemberRoutes } from "../controllers/teamMember";
 import { streamData } from "../controllers/chat.controller";
 import { getDashboardData } from "../controllers/dashboard";
+
 const app = new Hono();
 
 // 用户相关路由
-app.post("/api/auth/login", login);
-app.post("/api/auth/register", register);
+app.post("/api/register", register);
+app.post("/api/login", login);
 app.get("/api/user/profile", getProfile);
+app.patch("/api/user/profile", updateProfile);
+app.post("/api/user/change-password", changePassword);
+app.patch("/api/user/settings", updateSettings);
 
 // 团队相关路由
 app.post("/api/teams", teamRoutes.create);

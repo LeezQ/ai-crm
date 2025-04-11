@@ -145,11 +145,42 @@ export const opportunityRoutes = {
 
   list: async (c: Context) => {
     try {
-      const userId = c.get("user").id;
-      const currentTeamId = parseInt(c.get("user").currentTeamId);
+      const user = c.get("user") as User & { currentTeamId: string };
+      const userId = user.id;
+      const currentTeamId = user.currentTeamId
+        ? parseInt(user.currentTeamId)
+        : null;
+      const isAdmin = user.role === "admin";
       const { page = "1", pageSize = "20" } = c.req.query();
       const offset = (Number(page) - 1) * Number(pageSize);
 
+      // 如果是管理员，直接返回所有商机
+      if (isAdmin) {
+        const [{ total }] = await db
+          .select({
+            total: sql<number>`count(*)::int`,
+          })
+          .from(opportunities);
+
+        const items = await db
+          .select()
+          .from(opportunities)
+          .orderBy(desc(opportunities.id))
+          .limit(Number(pageSize))
+          .offset(offset);
+
+        return c.json({
+          items,
+          pagination: {
+            total,
+            page: Number(page),
+            pageSize: Number(pageSize),
+            totalPages: Math.ceil(total / Number(pageSize)),
+          },
+        });
+      }
+
+      // 非管理员，查询用户所在团队
       const userTeams = await db
         .select({
           teamId: teamMembers.teamId,
@@ -159,13 +190,19 @@ export const opportunityRoutes = {
 
       const teamIds = userTeams.map((team) => team.teamId).filter(Boolean);
 
+      // 构建查询条件
       const whereConditions = [];
       if (currentTeamId) {
+        // 优先使用当前选择的团队
         whereConditions.push(eq(opportunities.teamId, currentTeamId));
       } else if (teamIds.length > 0) {
-        whereConditions.push(sql`${opportunities.teamId} = ANY(${teamIds})`);
+        // 如果未选择特定团队，则查询用户所有团队的商机
+        whereConditions.push(
+          sql`${opportunities.teamId} IN (${sql.join(teamIds, sql`, `)})`
+        );
       }
 
+      // 执行查询
       const [{ total }] = await db
         .select({
           total: sql<number>`count(*)::int`,

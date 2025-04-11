@@ -48,7 +48,6 @@ export default function OpportunityDetailDrawer({
   onClose,
   onUpdate
 }: OpportunityDetailDrawerProps) {
-  const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<Partial<Opportunity>>({});
   // 跟进记录相关状态
@@ -62,6 +61,19 @@ export default function OpportunityDetailDrawer({
     nextPlan: '',
   });
   const [submittingFollowUp, setSubmittingFollowUp] = useState(false);
+
+  // 初始化表单数据
+  useEffect(() => {
+    if (opportunity) {
+      const formInit = {
+        ...opportunity,
+        expectedCloseDate: opportunity.expectedCloseDate
+          ? dayjs(opportunity.expectedCloseDate).format('YYYY-MM-DD')
+          : '',
+      };
+      setFormData(formInit as Partial<Opportunity>);
+    }
+  }, [opportunity]);
 
   // 获取跟进记录
   useEffect(() => {
@@ -137,28 +149,6 @@ export default function OpportunityDetailDrawer({
     return typeMap[type] || '其他';
   };
 
-  // 开始编辑，初始化表单数据
-  const handleEdit = () => {
-    if (opportunity) {
-      // 复制对象并处理日期字段
-      const formInit = {
-        ...opportunity,
-        // 如果有预计成交日期，转换为YYYY-MM-DD格式，用于日期输入框
-        expectedCloseDate: opportunity.expectedCloseDate
-          ? dayjs(opportunity.expectedCloseDate).format('YYYY-MM-DD')
-          : '',
-      };
-      setFormData(formInit as Partial<Opportunity>);
-      setIsEditing(true);
-    }
-  };
-
-  // 取消编辑
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-    setFormData({});
-  };
-
   // 保存编辑
   const handleSave = async () => {
     if (!opportunity || !formData) return;
@@ -197,7 +187,6 @@ export default function OpportunityDetailDrawer({
         dataToSubmit
       );
 
-      setIsEditing(false);
       if (onUpdate) {
         onUpdate(response as Opportunity);
       }
@@ -259,9 +248,9 @@ export default function OpportunityDetailDrawer({
         {opportunity && (
           <>
             <DrawerHeader className="text-left border-b">
-              <DrawerTitle>{isEditing ? '编辑商机' : '商机详情'}: {opportunity.companyName}</DrawerTitle>
+              <DrawerTitle>编辑商机: {opportunity.companyName}</DrawerTitle>
               <DrawerDescription>
-                {isEditing ? '编辑商机信息，保存以更新变更' : '查看和编辑商机详细信息。'}
+                编辑商机信息，保存以更新变更
               </DrawerDescription>
             </DrawerHeader>
 
@@ -273,193 +262,162 @@ export default function OpportunityDetailDrawer({
                 </TabsList>
 
                 <TabsContent value="info" className="space-y-4">
-                  {!isEditing ? (
-                    // 查看模式
-                    <>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="font-semibold">公司名称:</div><div>{opportunity.companyName}</div>
-                        <div className="font-semibold">网站:</div><div>{opportunity.website || '-'}</div>
-                        <div className="font-semibold">联系人:</div><div>{opportunity.contactPerson || '-'}</div>
-                        <div className="font-semibold">联系电话:</div><div>{opportunity.contactPhone || '-'}</div>
-                        <div className="font-semibold">微信:</div><div>{opportunity.contactWechat || '-'}</div>
-                        <div className="font-semibold">部门:</div><div>{opportunity.contactDepartment || '-'}</div>
-                        <div className="font-semibold">职位:</div><div>{opportunity.contactPosition || '-'}</div>
-                        <div className="font-semibold">公司规模:</div><div>{opportunity.companySize || '-'}</div>
-                        <div className="font-semibold">地区:</div><div>{opportunity.region || '-'}</div>
-                        <div className="font-semibold">行业:</div><div>{opportunity.industry || '-'}</div>
-                        <div className="font-semibold">进度:</div><div>{getStatusBadge(opportunity.progress)}</div>
-                        <div className="font-semibold">状态:</div><div>{getStatusBadge(opportunity.status)}</div>
-                        <div className="font-semibold">优先级:</div><div>{getPriorityBadge(opportunity.priority)}</div>
-                        <div className="font-semibold">预期金额:</div><div>¥{parseFloat(opportunity.expectedAmount || '0').toLocaleString()}</div>
-                        <div className="font-semibold">来源:</div><div>{opportunity.source || '-'}</div>
-                        <div className="font-semibold">预计成交日期:</div><div>{opportunity.expectedCloseDate ? dayjs(opportunity.expectedCloseDate).format('YYYY/MM/DD') : '-'}</div>
-                        <div className="font-semibold">创建时间:</div><div>{dayjs(opportunity.createdAt).format('YYYY/MM/DD HH:mm')}</div>
-                        <div className="font-semibold">更新时间:</div><div>{dayjs(opportunity.updatedAt).format('YYYY/MM/DD HH:mm')}</div>
-                      </div>
-                      <div className="pt-4">
-                        <h4 className="font-semibold mb-2">描述:</h4>
-                        <p className="text-sm text-gray-600 whitespace-pre-wrap">{opportunity.description || '无描述'}</p>
-                      </div>
-                    </>
-                  ) : (
-                    // 编辑模式
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">公司名称</label>
-                          <Input
-                            name="companyName"
-                            value={formData.companyName || ''}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">网站</label>
-                          <Input
-                            name="website"
-                            value={formData.website || ''}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">联系人</label>
-                          <Input
-                            name="contactPerson"
-                            value={formData.contactPerson || ''}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">联系电话</label>
-                          <Input
-                            name="contactPhone"
-                            value={formData.contactPhone || ''}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">微信</label>
-                          <Input
-                            name="contactWechat"
-                            value={formData.contactWechat || ''}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">部门</label>
-                          <Input
-                            name="contactDepartment"
-                            value={formData.contactDepartment || ''}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">职位</label>
-                          <Input
-                            name="contactPosition"
-                            value={formData.contactPosition || ''}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">公司规模</label>
-                          <Input
-                            name="companySize"
-                            value={formData.companySize || ''}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">地区</label>
-                          <Input
-                            name="region"
-                            value={formData.region || ''}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">行业</label>
-                          <Input
-                            name="industry"
-                            value={formData.industry || ''}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">状态</label>
-                          <Select
-                            value={formData.status || 'new'}
-                            onValueChange={(value) => handleSelectChange('status', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="选择状态" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {statuses.map(status => (
-                                <SelectItem key={status.value} value={status.value}>
-                                  {status.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">优先级</label>
-                          <Select
-                            value={formData.priority || 'normal'}
-                            onValueChange={(value) => handleSelectChange('priority', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="选择优先级" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {priorities.map(priority => (
-                                <SelectItem key={priority.value} value={priority.value}>
-                                  {priority.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">预期金额 (¥)</label>
-                          <Input
-                            name="expectedAmount"
-                            type="number"
-                            value={formData.expectedAmount || ''}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">来源</label>
-                          <Input
-                            name="source"
-                            value={formData.source || ''}
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">预计成交日期</label>
-                          <Input
-                            name="expectedCloseDate"
-                            type="date"
-                            value={formData.expectedCloseDate || ''}
-                            onChange={handleDateChange}
-                          />
-                        </div>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">公司名称</label>
+                        <Input
+                          name="companyName"
+                          value={formData.companyName || ''}
+                          onChange={handleInputChange}
+                        />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">描述</label>
-                        <Textarea
-                          name="description"
-                          rows={4}
-                          value={formData.description || ''}
+                        <label className="text-sm font-medium">网站</label>
+                        <Input
+                          name="website"
+                          value={formData.website || ''}
                           onChange={handleInputChange}
-                          className="resize-none"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">联系人</label>
+                        <Input
+                          name="contactPerson"
+                          value={formData.contactPerson || ''}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">联系电话</label>
+                        <Input
+                          name="contactPhone"
+                          value={formData.contactPhone || ''}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">微信</label>
+                        <Input
+                          name="contactWechat"
+                          value={formData.contactWechat || ''}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">部门</label>
+                        <Input
+                          name="contactDepartment"
+                          value={formData.contactDepartment || ''}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">职位</label>
+                        <Input
+                          name="contactPosition"
+                          value={formData.contactPosition || ''}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">公司规模</label>
+                        <Input
+                          name="companySize"
+                          value={formData.companySize || ''}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">地区</label>
+                        <Input
+                          name="region"
+                          value={formData.region || ''}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">行业</label>
+                        <Input
+                          name="industry"
+                          value={formData.industry || ''}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">状态</label>
+                        <Select
+                          value={formData.status || 'new'}
+                          onValueChange={(value) => handleSelectChange('status', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="选择状态" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {statuses.map(status => (
+                              <SelectItem key={status.value} value={status.value}>
+                                {status.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">优先级</label>
+                        <Select
+                          value={formData.priority || 'normal'}
+                          onValueChange={(value) => handleSelectChange('priority', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="选择优先级" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {priorities.map(priority => (
+                              <SelectItem key={priority.value} value={priority.value}>
+                                {priority.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">预期金额 (¥)</label>
+                        <Input
+                          name="expectedAmount"
+                          type="number"
+                          value={formData.expectedAmount || ''}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">来源</label>
+                        <Input
+                          name="source"
+                          value={formData.source || ''}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">预计成交日期</label>
+                        <Input
+                          name="expectedCloseDate"
+                          type="date"
+                          value={formData.expectedCloseDate || ''}
+                          onChange={handleDateChange}
                         />
                       </div>
                     </div>
-                  )}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">描述</label>
+                      <Textarea
+                        name="description"
+                        rows={4}
+                        value={formData.description || ''}
+                        onChange={handleInputChange}
+                        className="resize-none"
+                      />
+                    </div>
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="follow-up" className="space-y-4">
@@ -580,31 +538,13 @@ export default function OpportunityDetailDrawer({
             </div>
 
             <DrawerFooter className="pt-2 border-t">
-              {activeTab === "info" ? (
-                !isEditing ? (
-                  <>
-                    <Button onClick={handleEdit}>编辑</Button>
-                    <DrawerClose asChild>
-                      <Button variant="outline" onClick={onClose}>关闭</Button>
-                    </DrawerClose>
-                  </>
-                ) : (
-                  <>
-                    <Button onClick={handleSave} disabled={saving}>
-                      {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                      保存
-                    </Button>
-                    <Button variant="outline" onClick={handleCancelEdit} disabled={saving}>
-                      <X className="mr-2 h-4 w-4" />
-                      取消
-                    </Button>
-                  </>
-                )
-              ) : (
-                <DrawerClose asChild>
-                  <Button variant="outline" onClick={onClose}>关闭</Button>
-                </DrawerClose>
-              )}
+              <Button onClick={handleSave} disabled={saving}>
+                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                保存
+              </Button>
+              <DrawerClose asChild>
+                <Button variant="outline" onClick={onClose}>关闭</Button>
+              </DrawerClose>
             </DrawerFooter>
           </>
         )}

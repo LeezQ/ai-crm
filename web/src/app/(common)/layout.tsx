@@ -31,11 +31,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { request } from '@/lib/api';
 
 const menuItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: '仪表盘' },
-  { href: '/opportunities', icon: Briefcase, label: '商机管理' },
-  { href: '/teams', icon: Users, label: '团队管理' },
-  { href: '/chat', icon: MessageSquare, label: 'AI 助手' },
-  { href: '/settings', icon: Settings, label: '系统设置' },
+  { href: '/dashboard', icon: LayoutDashboard, label: '仪表盘', color: 'text-blue-500' },
+  { href: '/opportunities', icon: Briefcase, label: '商机管理', color: 'text-emerald-500' },
+  { href: '/teams', icon: Users, label: '团队管理', color: 'text-purple-500' },
+  { href: '/chat', icon: MessageSquare, label: 'AI 助手', color: 'text-amber-500' },
+  { href: '/settings', icon: Settings, label: '个人设置', color: 'text-sky-500' },
 ];
 
 interface UserProfile {
@@ -110,7 +110,7 @@ export default function MainLayout({
                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white'
                 )}
               >
-                <item.icon className="h-5 w-5" />
+                <item.icon className={`h-5 w-5 ${isActive ? item.color : 'text-gray-500 dark:text-gray-400'}`} />
                 <span>{item.label}</span>
               </Link>
             );
@@ -122,7 +122,7 @@ export default function MainLayout({
             className="w-full justify-start text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
             onClick={handleLogout}
           >
-            <LogOut className="mr-2 h-4 w-4" />
+            <LogOut className="mr-2 h-4 w-4 text-red-500" />
             <span>退出登录</span>
           </Button>
         </div>
@@ -153,7 +153,10 @@ export default function MainLayout({
               className="rounded-full"
               onClick={toggleDarkMode}
             >
-              {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              {isDarkMode ?
+                <Sun className="h-5 w-5 text-amber-400" /> :
+                <Moon className="h-5 w-5 text-indigo-400" />
+              }
             </Button>
 
             <Button
@@ -161,7 +164,7 @@ export default function MainLayout({
               size="icon"
               className="rounded-full relative"
             >
-              <Bell className="h-5 w-5" />
+              <Bell className="h-5 w-5 text-rose-400" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </Button>
 
@@ -183,15 +186,15 @@ export default function MainLayout({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
+                  <User className="mr-2 h-4 w-4 text-blue-500" />
                   <span>个人信息</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
+                <DropdownMenuItem onClick={() => router.push('/settings')}>
+                  <Settings className="mr-2 h-4 w-4 text-sky-500" />
                   <span>账号设置</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout} className="text-red-600 dark:text-red-400">
-                  <LogOut className="mr-2 h-4 w-4" />
+                  <LogOut className="mr-2 h-4 w-4 text-red-500" />
                   <span>退出登录</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
