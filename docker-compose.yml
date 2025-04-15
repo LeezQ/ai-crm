@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+    networks:
+      - app-network
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    # Add environment variables for the server if needed
+    # environment:
+    #   - DATABASE_URL=postgresql://user:password@db:5432/mydatabase
+    #   - JWT_SECRET=your_secret_key
+    depends_on:
+      - db # Assuming you have a database service
+    networks:
+      - app-network
+
+  # Add a database service if required
+  # db:
+  #   image: postgres:15-alpine
+  #   environment:
+  #     POSTGRES_USER: user
+  #     POSTGRES_PASSWORD: password
+  #     POSTGRES_DB: mydatabase
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - app-network
+  #   ports:
+  #     - "5432:5432"
+
+networks:
+  app-network:
+    driver: bridge
+# volumes:
+#   postgres_data: # Define the volume for database persistence

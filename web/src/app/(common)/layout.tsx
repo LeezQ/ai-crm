@@ -23,7 +23,6 @@ import {
   Menu,
   X,
   FileText,
-  ChevronUp,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -45,9 +44,13 @@ const menuItems = [
     label: '资源中心',
     color: 'text-orange-500',
     subMenus: [
-      { href: '/resources/technical', label: '技术支持材料' },
-      { href: '/resources/sales', label: '销售支持材料' },
-      { href: '/resources/internal', label: '内部材料' },
+      { href: '/iframe?src=https%3A%2F%2Ffael3z0zfze.feishu.cn%2Fwiki%2FXq8nw2xveiJYfbkuPzBcOT5unTf%3Ffrom%3Dfrom_copylink&title=技术支持材料', label: '技术支持材料' },
+      { href: '/iframe?src=https%3A%2F%2Ffael3z0zfze.feishu.cn%2Fdocx%2FVBo9dNFxWotAhVxtpaZcrx6ynve%3Ffrom%3Dfrom_copylink&title=销售支持材料', label: '销售支持材料' },
+      { href: '/iframe?src=https%3A%2F%2Ffael3z0zfze.feishu.cn%2Fwiki%2FLxCgwWeu8i6RddkW7CwcM2Fenq5%3Ffrom%3Dfrom_copylink&title=内部材料', label: '内部材料' },
+      {
+        href: '/iframe?src=https%3A%2F%2Fwww.baidu.com&title=%E7%99%BE%E5%BA%A6%E6%90%9C%E7%B4%A2',
+        label: '百度搜索(示例)'
+      },
     ]
   },
   { href: '/settings', icon: Settings, label: '个人设置', color: 'text-sky-500' },
@@ -74,7 +77,6 @@ export default function MainLayout({
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
   const pathname = usePathname();
   const router = useRouter();
   const isMobile = useIsMobile();
@@ -104,13 +106,6 @@ export default function MainLayout({
     }
   }, [pathname, isMobile]);
 
-  // 判断当前路径是否属于资源中心子菜单，如果是则默认展开资源中心
-  useEffect(() => {
-    if (pathname.startsWith('/resources')) {
-      setExpandedMenu('资源中心');
-    }
-  }, [pathname]);
-
   const handleLogout = () => {
     localStorage.removeItem('token');
     router.push('/login');
@@ -125,9 +120,9 @@ export default function MainLayout({
     setSidebarOpen(!isSidebarOpen);
   };
 
-  // 切换子菜单的展开/折叠状态
-  const toggleSubMenu = (label: string) => {
-    setExpandedMenu(expandedMenu === label ? null : label);
+  // Function to check if a submenu link is active
+  const isSubMenuActive = (subMenus: Array<{ href: string }>): boolean => {
+    return subMenus.some(subMenu => pathname === subMenu.href);
   };
 
   return (
@@ -160,61 +155,47 @@ export default function MainLayout({
           <nav className="flex-1 overflow-y-auto py-6">
             {menuItems.map((item) => {
               const hasSubMenus = item.subMenus && item.subMenus.length > 0;
-              const isActive = hasSubMenus
-                ? pathname.startsWith('/resources')
-                : pathname.startsWith(item.href || '');
-              const isExpanded = expandedMenu === item.label;
+              const isParentActive = hasSubMenus && isSubMenuActive(item.subMenus);
+              const isActive = hasSubMenus ? isParentActive : pathname.startsWith(item.href || '');
 
               return (
-                <div key={item.label} className="mb-1">
+                <div key={item.label} className="mx-2 mb-1">
                   {hasSubMenus ? (
-                    <>
-                      <button
-                        onClick={() => toggleSubMenu(item.label)}
-                        className={cn(
-                          'w-full flex items-center justify-between px-4 py-3 text-sm font-medium transition-colors mx-2 rounded-md',
-                          isActive
-                            ? 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white'
-                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white'
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <item.icon className={`h-5 w-5 ${isActive ? item.color : 'text-gray-500 dark:text-gray-400'}`} />
-                          <span>{item.label}</span>
-                        </div>
-                        {isExpanded ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </button>
-                      {isExpanded && (
-                        <div className="ml-9 mt-1 space-y-1">
-                          {item.subMenus.map((subMenu) => {
-                            const isSubActive = pathname === subMenu.href;
-                            return (
-                              <Link
-                                key={subMenu.href}
-                                href={subMenu.href}
-                                className={cn(
-                                  'block px-4 py-2 text-sm rounded-md transition-colors',
-                                  isSubActive
-                                    ? 'bg-gray-100 text-gray-900 font-medium dark:bg-gray-700 dark:text-white'
-                                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white'
-                                )}
-                              >
-                                {subMenu.label}
-                              </Link>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </>
+                    <div className="space-y-1">
+                      {/* Render parent item as a non-clickable header */}
+                      <div className={cn(
+                        'flex items-center gap-3 px-2 py-3 text-sm font-medium rounded-md text-gray-600 dark:text-gray-300',
+                        isActive ? 'text-gray-900 dark:text-white' : ''
+                      )}>
+                        <item.icon className={`h-5 w-5 ${isActive ? item.color : 'text-gray-500 dark:text-gray-400'}`} />
+                        <span>{item.label}</span>
+                      </div>
+                      {/* Always render submenus */}
+                      <div className="space-y-1">
+                        {item.subMenus.map((subMenu) => {
+                          const isSubActive = pathname === subMenu.href;
+                          return (
+                            <Link
+                              key={subMenu.href}
+                              href={subMenu.href}
+                              className={cn(
+                                'block pl-8 pr-4 py-1.5 text-sm rounded-md transition-colors',
+                                isSubActive
+                                  ? 'bg-gray-100 text-gray-900 font-medium dark:bg-gray-700 dark:text-white'
+                                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white'
+                              )}
+                            >
+                              {subMenu.label}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
                   ) : (
                     <Link
                       href={item.href || ''}
                       className={cn(
-                        'flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors mx-2 rounded-md',
+                        'flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors rounded-md',
                         isActive
                           ? 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white'
                           : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white'

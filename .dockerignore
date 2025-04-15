@@ -1,0 +1,17 @@
+node_modules
+.next
+out
+.env*
+.git
+.gitignore
+Dockerfile*
+docker-compose.yml
+README.md
+
+# Ignore server node_modules in web context and vice-versa
+server/node_modules
+web/node_modules
+
+# Ignore potentially large files/directories not needed for build
+*.log
+.DS_Store

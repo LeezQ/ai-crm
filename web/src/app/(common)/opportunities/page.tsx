@@ -3,8 +3,16 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { Opportunity } from "@/types/opportunity";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, SlidersHorizontal } from 'lucide-react';
 import dayjs from 'dayjs';
 import OpportunityDetailDrawer from './components/opportunity-detail-drawer';
 import { getStatusBadge, getPriorityBadge } from "@/components/ui/status-badges";
@@ -17,10 +25,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/navigation";
-import {
-  SlidersHorizontal,
-} from "lucide-react";
-import { Card } from "@/components/ui/card";
 
 interface OpportunitiesResponse {
   items: Opportunity[];
@@ -76,32 +80,21 @@ export default function OpportunitiesPage() {
 
   const handleDrawerClose = () => {
     setIsDrawerOpen(false);
-    // Delay clearing the selected opportunity to allow the drawer to animate closed
     setTimeout(() => {
       setSelectedOpportunity(null);
     }, 300);
   };
 
-  const filteredOpportunities = opportunities.filter((opp) => {
-    const matchesSearch = (opp.companyName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (opp.contactPerson?.toLowerCase() || '').includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || opp.status === statusFilter;
-    const matchesPriority = priorityFilter === 'all' || opp.priority === priorityFilter;
-    return matchesSearch && matchesStatus && matchesPriority;
-  });
-
   if (loading) {
     return (
-      <div className="">
-        <div className="flex items-center justify-center h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
+      <div className="flex items-center justify-center h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (error) {
-    return <div>{error}</div>;
+    return <div>加载失败: {error}</div>;
   }
 
   return (
@@ -140,80 +133,60 @@ export default function OpportunitiesPage() {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-md border bg-white">
-          <div className="w-full overflow-auto">
-            <table className="w-full caption-bottom text-sm">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="h-10 px-2 text-left align-middle font-medium text-muted-foreground">
-                    公司名称
-                  </th>
-                  <th className="h-10 px-2 text-left align-middle font-medium text-muted-foreground hidden sm:table-cell">
-                    联系人
-                  </th>
-                  <th className="h-10 px-2 text-left align-middle font-medium text-muted-foreground">
-                    状态
-                  </th>
-                  <th className="h-10 px-2 text-left align-middle font-medium text-muted-foreground hidden md:table-cell">
-                    优先级
-                  </th>
-                  <th className="h-10 px-2 text-left align-middle font-medium text-muted-foreground hidden lg:table-cell">
-                    创建时间
-                  </th>
-                  <th className="h-10 px-2 text-left align-middle font-medium text-muted-foreground">
-                    操作
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={6} className="text-center py-10">
-                      <div className="flex justify-center">
-                        <Loader2 className="animate-spin h-6 w-6 text-primary" />
-                      </div>
-                    </td>
-                  </tr>
-                ) : error ? (
-                  <tr>
-                    <td colSpan={6} className="text-center py-10 text-destructive">
-                      加载失败: {error}
-                    </td>
-                  </tr>
-                ) : filteredOpportunities.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="text-center py-10 text-muted-foreground">
-                      暂无数据
-                    </td>
-                  </tr>
-                ) : (
-                  filteredOpportunities.map((opportunity) => (
-                    <tr key={opportunity.id} className="hover:bg-muted/50 cursor-pointer"
-                      onClick={() => handleViewDetails(opportunity)}>
-                      <td className="p-2 align-middle">{opportunity.companyName}</td>
-                      <td className="p-2 align-middle hidden sm:table-cell">{opportunity.contactPerson || '-'}</td>
-                      <td className="p-2 align-middle">{getStatusBadge(opportunity.status)}</td>
-                      <td className="p-2 align-middle hidden md:table-cell">{getPriorityBadge(opportunity.priority)}</td>
-                      <td className="p-2 align-middle hidden lg:table-cell">{dayjs(opportunity.createdAt).format('YYYY/MM/DD HH:mm')}</td>
-                      <td className="p-2 align-middle">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-primary font-medium"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewDetails(opportunity);
-                          }}
-                        >
-                          查看详情
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+        <div className="rounded-md border bg-white">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>公司名称</TableHead>
+                <TableHead>联系人</TableHead>
+                <TableHead>状态</TableHead>
+                <TableHead>进度</TableHead>
+                <TableHead>优先级</TableHead>
+                <TableHead>预期金额</TableHead>
+                <TableHead>来源</TableHead>
+                <TableHead>创建时间</TableHead>
+                <TableHead>更新时间</TableHead>
+                <TableHead>操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {opportunities.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={10} className="h-24 text-center">
+                    暂无数据
+                  </TableCell>
+                </TableRow>
+              ) : (
+                opportunities.map((opportunity) => (
+                  <TableRow key={opportunity.id} className="cursor-pointer"
+                    onClick={() => handleViewDetails(opportunity)}>
+                    <TableCell>{opportunity.companyName}</TableCell>
+                    <TableCell>{opportunity.contactPerson || '-'}</TableCell>
+                    <TableCell>{getStatusBadge(opportunity.status)}</TableCell>
+                    <TableCell>{getStatusBadge(opportunity.progress)}</TableCell>
+                    <TableCell>{getPriorityBadge(opportunity.priority)}</TableCell>
+                    <TableCell>¥{Number(opportunity.expectedAmount || 0).toLocaleString()}</TableCell>
+                    <TableCell>{opportunity.source || '-'}</TableCell>
+                    <TableCell>{dayjs(opportunity.createdAt).format('YYYY/MM/DD HH:mm')}</TableCell>
+                    <TableCell>{dayjs(opportunity.updatedAt).format('YYYY/MM/DD HH:mm')}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-primary font-medium h-auto p-0 hover:bg-transparent hover:underline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewDetails(opportunity);
+                        }}
+                      >
+                        查看详情
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </div>
 
         {total > 0 && (
@@ -248,11 +221,9 @@ export default function OpportunitiesPage() {
           onOpenChange={setIsDrawerOpen}
           onClose={handleDrawerClose}
           onUpdate={(updatedOpportunity) => {
-            // 更新表格中的数据
             setOpportunities(opportunities.map(opp =>
               opp.id === updatedOpportunity.id ? updatedOpportunity : opp
             ));
-            // 更新选中的商机
             setSelectedOpportunity(updatedOpportunity);
           }}
         />
