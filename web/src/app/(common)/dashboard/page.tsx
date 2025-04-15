@@ -32,6 +32,7 @@ interface DashboardData {
     contactPerson: string;
     status: string;
     priority: string;
+    expectedAmount?: string;
     createdAt: string;
   }>;
 }
@@ -77,7 +78,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <Card className="bg-white border-slate-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">商机总数</CardTitle>
@@ -128,57 +129,74 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <Card className="bg-white border-slate-200">
-        <CardHeader>
-          <CardTitle>最近商机</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>公司名称</TableHead>
-                <TableHead>联系人</TableHead>
-                <TableHead>状态</TableHead>
-                <TableHead>优先级</TableHead>
-                <TableHead>创建时间</TableHead>
-                <TableHead>操作</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+      <div>
+        <h2 className="text-lg font-semibold mb-4">近期商机</h2>
+        <div className="overflow-auto border rounded-md">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  公司名称
+                </th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap hidden sm:table-cell">
+                  联系人
+                </th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap hidden md:table-cell">
+                  金额
+                </th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  状态
+                </th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap hidden lg:table-cell">
+                  创建时间
+                </th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  操作
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
               {data?.recentOpportunities && data.recentOpportunities.length > 0 ? (
-                data.recentOpportunities.map((opp) => (
-                  <TableRow key={opp.id}>
-                    <TableCell className="font-medium">{opp.companyName}</TableCell>
-                    <TableCell>{opp.contactPerson}</TableCell>
-                    <TableCell>
-                      {getStatusBadge(opp.status)}
-                    </TableCell>
-                    <TableCell>
-                      {getPriorityBadge(opp.priority)}
-                    </TableCell>
-                    <TableCell>{dayjs(opp.createdAt).format("YYYY-MM-DD")}</TableCell>
-                    <TableCell>
+                data.recentOpportunities.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    <td className="px-3 py-3 whitespace-nowrap text-sm">
+                      {item.companyName}
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap text-sm hidden sm:table-cell">
+                      {item.contactPerson || '-'}
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap text-sm hidden md:table-cell">
+                      ¥{Number(item.expectedAmount || 0).toLocaleString()}
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap text-sm">
+                      {getStatusBadge(item.status)}
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
+                      {dayjs(item.createdAt).format('YYYY/MM/DD')}
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap text-sm">
                       <Button
-                        variant="link"
-                        className="text-primary font-medium p-0 hover:underline underline-offset-4"
-                        onClick={() => router.push(`/opportunities/${opp.id}`)}
+                        variant="ghost"
+                        size="sm"
+                        className="text-primary font-medium"
+                        onClick={() => router.push(`/opportunities/${item.id}`)}
                       >
                         查看详情
                       </Button>
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ))
               ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                <tr>
+                  <td colSpan={6} className="px-3 py-4 text-center text-sm text-gray-500">
                     暂无数据
-                  </TableCell>
-                </TableRow>
+                  </td>
+                </tr>
               )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

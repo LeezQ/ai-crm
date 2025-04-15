@@ -244,7 +244,7 @@ export default function OpportunityDetailDrawer({
 
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange} direction="right">
-      <DrawerContent className="w-full h-full">
+      <DrawerContent className="w-full sm:max-w-[100%] md:max-w-[80%] lg:max-w-[65%] h-full">
         {opportunity && (
           <>
             <DrawerHeader className="text-left border-b">
@@ -263,7 +263,7 @@ export default function OpportunityDetailDrawer({
 
                 <TabsContent value="info" className="space-y-4">
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-sm font-medium">公司名称</label>
                         <Input
@@ -426,7 +426,7 @@ export default function OpportunityDetailDrawer({
                       <CardContent className="p-4">
                         <form onSubmit={handleCreateFollowUp} className="space-y-4">
                           <h3 className="text-lg font-medium mb-4">添加跟进记录</h3>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label>跟进类型</Label>
                               <Select
@@ -538,13 +538,15 @@ export default function OpportunityDetailDrawer({
             </div>
 
             <DrawerFooter className="pt-2 border-t">
-              <Button onClick={handleSave} disabled={saving}>
-                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                保存
-              </Button>
-              <DrawerClose asChild>
-                <Button variant="outline" onClick={onClose}>关闭</Button>
-              </DrawerClose>
+              <div className="flex flex-col sm:flex-row gap-2 w-full">
+                <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
+                  {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                  保存
+                </Button>
+                <DrawerClose asChild>
+                  <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">关闭</Button>
+                </DrawerClose>
+              </div>
             </DrawerFooter>
           </>
         )}
