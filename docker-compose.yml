@@ -1,29 +1,39 @@
 version: "3.8"
 
 services:
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80" # 外部访问端口
+    volumes:
+      - ./web/nginx.conf:/etc/nginx/conf.d/default.conf:ro # 挂载 Nginx 配置
+    depends_on:
+      - web
+      - server
+    networks:
+      - app-network
+
   web:
     build:
       context: ./web
       dockerfile: Dockerfile
-    ports:
-      - "80:80"
-    depends_on:
-      - server
+    # 不再需要映射端口，Nginx 会处理
+    # ports:
+    #   - "3000:3000"
     networks:
       - app-network
+    # 可以添加环境变量，例如 API 地址
+    # environment:
+    #   - NEXT_PUBLIC_API_URL=/api
 
   server:
     build:
       context: ./server
       dockerfile: Dockerfile
-    ports:
-      - "3002:3002"
-    # Add environment variables for the server if needed
+    # ports:
+    #   - "3002:3002" # 端口由内部网络访问，无需映射到宿主机
     # environment:
     #   - DATABASE_URL=postgresql://user:password@db:5432/mydatabase
-    #   - JWT_SECRET=your_secret_key
-    depends_on:
-      - db # Assuming you have a database service
     networks:
       - app-network
 

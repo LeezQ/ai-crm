@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
-export default function IframePage() {
+// 创建一个组件来使用 useSearchParams
+function IframeContent() {
   const searchParams = useSearchParams();
   const [url, setUrl] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -46,5 +47,18 @@ export default function IframePage() {
         ></iframe>
       )}
     </div>
+  );
+}
+
+// 主页面组件使用 Suspense 包装内容组件
+export default function IframePage() {
+  return (
+    <Suspense fallback={
+      <div className="absolute inset-0 flex justify-center items-center bg-gray-50">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <IframeContent />
+    </Suspense>
   );
 }

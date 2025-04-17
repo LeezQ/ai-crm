@@ -1,30 +1,36 @@
-# Stage 1: Build the Next.js application
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 # Install pnpm
 RUN npm install -g pnpm
 
 WORKDIR /app
 
+# Install dependencies (allowing lockfile updates)
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
+# Copy the rest of the application code
 COPY . .
 
-# Set environment variables if needed
-# ENV NEXT_PUBLIC_API_URL=http://localhost:3002/api
-
+# Build the Next.js application
 RUN pnpm build
 
-# Stage 2: Serve static files with Nginx
-FROM nginx:stable-alpine
+# 生产环境阶段
+FROM node:20-slim AS runner
+WORKDIR /app
 
-# Copy built static files from the builder stage
-COPY --from=builder /app/out /usr/share/nginx/html
+# Install production environment dependencies
+RUN npm install -g pnpm
 
-# Copy Nginx configuration
-COPY web/nginx.conf /etc/nginx/conf.d/default.conf
+# Copy standalone output from build stage
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/static ./.next/static
 
-EXPOSE 80
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=3000
+EXPOSE 3000
 
-CMD ["nginx", "-g", "daemon off;"]
+# Start Next.js
+CMD ["node", "server.js"]
