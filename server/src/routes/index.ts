@@ -16,8 +16,8 @@ import { getDashboardData } from "../controllers/dashboard";
 const app = new Hono();
 
 // 用户相关路由
-app.post("/api/register", register);
-app.post("/api/login", login);
+app.post("/api/auth/register", register);
+app.post("/api/auth/login", login);
 app.get("/api/user/profile", getProfile);
 app.patch("/api/user/profile", updateProfile);
 app.post("/api/user/change-password", changePassword);

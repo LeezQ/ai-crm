@@ -24,6 +24,6 @@ RUN pnpm prune --prod
 # Database migration (if needed)
 # RUN pnpm db:migrate
 
-EXPOSE 3002
+EXPOSE 3001
 
 CMD ["pnpm", "start"]

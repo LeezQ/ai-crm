@@ -31,7 +31,7 @@ services:
       context: ./server
       dockerfile: Dockerfile
     # ports:
-    #   - "3002:3002" # 端口由内部网络访问，无需映射到宿主机
+    #   - "3001:3001" # 端口由内部网络访问，无需映射到宿主机
     # environment:
     #   - DATABASE_URL=postgresql://user:password@db:5432/mydatabase
     networks:
