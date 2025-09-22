@@ -179,6 +179,7 @@ export const login = async (c: Context) => {
         400
       );
     }
+    console.error("登录失败详情:", error);
     return c.json(
       {
         success: false,

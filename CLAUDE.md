@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AI CRM system with separate frontend (Next.js) and backend (Hono) services, containerized with Docker.
+AI-augmented CRM system with natural language insights, automated opportunity drafting, and voice note transcription. Separate frontend (Next.js) and backend (Hono) services, containerized with Docker.
 
 ## Architecture
 
 ### Tech Stack
 - **Frontend (`/web`)**: Next.js 15 with TypeScript, React 19, TanStack Query, Tailwind CSS, shadcn/ui components
-- **Backend (`/server`)**: Hono framework with PostgreSQL, Drizzle ORM, JWT authentication
+- **Backend (`/server`)**: Hono framework with PostgreSQL, Drizzle ORM, JWT authentication, OpenAI integration
 - **Infrastructure**: Docker Compose with Nginx reverse proxy
 
 ### Key Architectural Decisions
@@ -18,6 +18,7 @@ AI CRM system with separate frontend (Next.js) and backend (Hono) services, cont
 - **API communication**: Frontend uses React Query for API requests via axios instance with interceptors
 - **Authentication**: JWT-based with localStorage for token storage, automatic redirect on 401
 - **Database**: PostgreSQL with Drizzle ORM, migrations managed via drizzle-kit
+- **AI Integration**: OpenAI SDK for chat, insights, voice transcription, and opportunity automation
 
 ## Development Commands
 
@@ -51,10 +52,14 @@ docker-compose logs -f   # View logs
 ### API Routes Pattern
 - Authentication: `/api/auth/*` (login, register, profile)
 - Opportunities: `/api/opportunities/*` (CRUD, follow-ups, status updates)
+- Voice Notes: `/api/opportunities/:id/voice-notes` (upload, transcribe, list)
 - Teams: `/api/teams/*` (CRUD, members management)
 - Analytics: `/api/dashboard`, `/api/analytics/*`
 - User: `/api/user/*` (profile, settings, password)
-- AI Chat: `/api/ai/chat` (streaming responses)
+- AI Features:
+  - `/api/ai/chat` - Streaming chat responses
+  - `/api/ai/insights` - Natural language CRM data queries ("AI 问数")
+  - `/api/ai/opportunities/assist` - Auto-fill opportunity fields from text
 
 ### Frontend Routing
 - Auth pages: `/(auth)/login`, `/(auth)/register`
@@ -64,10 +69,11 @@ docker-compose logs -f   # View logs
 ### Database Schema
 Main entities in `server/src/db/schema.ts`:
 - `users`: User accounts with authentication
-- `opportunities`: Business opportunities with status tracking
+- `opportunities`: Business opportunities with status tracking, expected amounts, follow-up scheduling
 - `teams`: Team management with member relationships
 - `team_members`: Junction table for team membership
 - `follow_ups`: Opportunity follow-up tracking
+- `voice_notes`: Audio recordings with transcriptions and AI-generated summaries
 
 ## Development Guidelines
 
@@ -94,12 +100,18 @@ All API requests go through `web/src/lib/api.ts` which handles:
 
 Frontend (`.env.local`):
 - `NEXT_PUBLIC_API_URL`: API base URL (defaults to proxy)
+- `API_SERVER_ORIGIN`: Backend origin for Docker deployments
 
 Backend (`.env`):
 - `DATABASE_URL`: PostgreSQL connection string
 - `JWT_SECRET`: Secret for JWT signing
 - `CORS_ORIGIN`: Allowed origin for CORS
 - `OPENAI_API_KEY`: OpenAI API key for AI features
+- `OPENAI_BASE_URL`: Optional custom OpenAI endpoint
+- `OPENAI_CHAT_MODEL`: Model for chat (default: gpt-4o-mini)
+- `OPENAI_INSIGHT_MODEL`: Model for insights (default: gpt-4o-mini)
+- `OPENAI_TRANSCRIBE_MODEL`: Model for transcription
+- `VOICE_NOTES_DIR`: Directory for voice note storage (default: ./storage/voice-notes)
 
 ## Port Configuration
 - Frontend: 3000 (development), served via Nginx in production
@@ -111,3 +123,18 @@ Backend (`.env`):
 2. Generate migration: `pnpm db:generate`
 3. Apply migration: `pnpm db:migrate`
 4. View database: `pnpm db:studio`
+
+## AI Features
+
+### Natural Language Insights ("AI 问数")
+Query CRM data using natural language at `/api/ai/insights`. The system interprets questions, generates structured queries, and returns summarized results with actionable insights.
+
+### Opportunity Auto-Fill
+Convert unstructured text into structured opportunity data at `/api/ai/opportunities/assist`. Paste raw descriptions to automatically extract company info, contacts, and deal parameters.
+
+### Voice Note Processing
+Upload audio recordings to `/api/opportunities/:id/voice-notes` for:
+- Automatic transcription using OpenAI Whisper
+- AI-generated summaries with action items
+- Extraction of follow-up tasks and sentiment analysis
+- 以后服务什么的不需要你启动，我都是自己会启动的

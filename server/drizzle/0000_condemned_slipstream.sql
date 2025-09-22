@@ -27,7 +27,10 @@ CREATE TABLE IF NOT EXISTS "opportunities" (
 	"priority" varchar(50) DEFAULT 'normal' NOT NULL,
 	"description" text,
 	"source" varchar(50),
+	"expected_amount" numeric(12, 2) DEFAULT '0' NOT NULL,
 	"expected_close_date" timestamp,
+	"next_follow_up_at" timestamp,
+	"next_follow_up_note" text,
 	"owner_id" integer NOT NULL,
 	"team_id" integer,
 	"created_at" timestamp DEFAULT now() NOT NULL,
@@ -61,11 +64,27 @@ CREATE TABLE IF NOT EXISTS "users" (
 	"avatar" varchar(200),
 	"role" varchar(50) DEFAULT 'user' NOT NULL,
 	"status" varchar(50) DEFAULT 'active' NOT NULL,
-	"settings" jsonb DEFAULT '{}'::jsonb,
 	"last_login_at" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "users_email_unique" UNIQUE("email")
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "voice_notes" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"opportunity_id" integer NOT NULL,
+	"team_id" integer,
+	"user_id" integer NOT NULL,
+	"filename" varchar(255) NOT NULL,
+	"file_path" varchar(500) NOT NULL,
+	"mime_type" varchar(100) NOT NULL,
+	"duration_seconds" integer,
+	"transcript" text,
+	"summary" text,
+	"status" varchar(50) DEFAULT 'processing' NOT NULL,
+	"ai_metadata" jsonb,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "team_members_team_user_idx" ON "team_members" ("team_id","user_id");--> statement-breakpoint
@@ -101,6 +120,24 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "team_members" ADD CONSTRAINT "team_members_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "voice_notes" ADD CONSTRAINT "voice_notes_opportunity_id_opportunities_id_fk" FOREIGN KEY ("opportunity_id") REFERENCES "opportunities"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "voice_notes" ADD CONSTRAINT "voice_notes_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "teams"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "voice_notes" ADD CONSTRAINT "voice_notes_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE set null ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
