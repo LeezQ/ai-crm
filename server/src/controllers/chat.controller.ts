@@ -1,30 +1,25 @@
-import { createOpenAI } from "@ai-sdk/openai";
 import { streamText } from "ai";
 import { Context } from "hono";
 import { stream } from "hono/streaming";
+import { AIConfigError, getChatModel, isAIConfigured } from "../services/ai";
 
 interface Message {
   role: string;
   content: string;
 }
 
-const customAPI = createOpenAI({
-  baseURL: process.env.OPENAI_BASE_URL || "https://api.sealos.vip/v1",
-  apiKey:
-    process.env.OPENAI_API_KEY ||
-    "sk-DtkY5AgFJeSyUE5iC0B9773c56B744299f9292Ef8984F5D9",
-});
-
-const model = customAPI("gpt-4o-mini");
-
 export const streamData = async (c: Context) => {
   try {
+    if (!isAIConfigured()) {
+      return c.json({ error: "AI 功能未配置，请联系管理员" }, 503);
+    }
+
     // 解析请求体
     const { messages } = await c.req.json();
 
     // 创建AI流式响应
     const result = streamText({
-      model: model,
+      model: getChatModel("chat"),
       messages,
     });
 
@@ -64,6 +59,9 @@ export const streamData = async (c: Context) => {
       }
     });
   } catch (error) {
+    if (error instanceof AIConfigError) {
+      return c.json({ error: error.message }, 503);
+    }
     console.error("处理请求时出错:", error);
     c.status(500);
     return c.json({ error: "处理请求时出错" });

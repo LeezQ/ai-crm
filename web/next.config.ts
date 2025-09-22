@@ -1,12 +1,17 @@
 import type { NextConfig } from "next";
 
+const apiOrigin =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.API_SERVER_ORIGIN ||
+  "http://localhost:3001";
+
 const nextConfig: NextConfig = {
   async rewrites() {
-    const isDev = process.env.NODE_ENV === "development";
+    const origin = apiOrigin.replace(/\/$/, "");
     return [
       {
         source: "/api/:path*",
-        destination: "http://localhost:3001/api/:path*",
+        destination: `${origin}/api/:path*`,
         basePath: false,
       },
     ];

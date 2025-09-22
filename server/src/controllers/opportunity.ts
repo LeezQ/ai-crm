@@ -20,6 +20,9 @@ interface OpportunityCreateData {
   description?: string;
   source?: string;
   expectedCloseDate?: string | null;
+  expectedAmount?: string | number | null;
+  nextFollowUpAt?: string | null;
+  nextFollowUpNote?: string | null;
   ownerId: number; // Required
   teamId?: number;
   // progress is omitted, will use default 'initial'
@@ -45,9 +48,17 @@ export const opportunityController = {
         priority: data.priority || "normal", // Use form priority or default
         description: data.description,
         source: data.source,
+        expectedAmount:
+          data.expectedAmount !== undefined && data.expectedAmount !== null
+            ? String(data.expectedAmount)
+            : "0",
         expectedCloseDate: data.expectedCloseDate
           ? new Date(data.expectedCloseDate)
           : null,
+        nextFollowUpAt: data.nextFollowUpAt
+          ? new Date(data.nextFollowUpAt)
+          : null,
+        nextFollowUpNote: data.nextFollowUpNote,
         ownerId: data.ownerId,
         teamId: data.teamId,
         // createdAt/updatedAt will use default
@@ -92,15 +103,37 @@ export const opportunityController = {
   },
 
   async update(id: number, data: any) {
+    const updatePayload: Record<string, unknown> = {
+      ...data,
+      updatedAt: new Date(),
+    };
+
+    delete updatePayload.id;
+
+    if (data.expectedCloseDate !== undefined) {
+      updatePayload.expectedCloseDate = data.expectedCloseDate
+        ? new Date(data.expectedCloseDate)
+        : null;
+    }
+
+    if (data.expectedAmount !== undefined) {
+      updatePayload.expectedAmount =
+        data.expectedAmount !== null ? String(data.expectedAmount) : "0";
+    }
+
+    if (data.nextFollowUpAt !== undefined) {
+      updatePayload.nextFollowUpAt = data.nextFollowUpAt
+        ? new Date(data.nextFollowUpAt)
+        : null;
+    }
+
+    if (data.nextFollowUpNote !== undefined) {
+      updatePayload.nextFollowUpNote = data.nextFollowUpNote;
+    }
+
     const [opportunity] = await db
       .update(opportunities)
-      .set({
-        ...data,
-        expectedCloseDate: data.expectedCloseDate
-          ? new Date(data.expectedCloseDate)
-          : null,
-        updatedAt: new Date(),
-      })
+      .set(updatePayload)
       .where(eq(opportunities.id, id))
       .returning();
     return opportunity;
@@ -255,7 +288,10 @@ export const opportunityRoutes = {
           priority: opportunities.priority,
           description: opportunities.description,
           source: opportunities.source,
+          expectedAmount: opportunities.expectedAmount,
           expectedCloseDate: opportunities.expectedCloseDate,
+          nextFollowUpAt: opportunities.nextFollowUpAt,
+          nextFollowUpNote: opportunities.nextFollowUpNote,
           createTime: opportunities.createdAt,
           owner: users.name,
         })
@@ -286,6 +322,31 @@ export const opportunityRoutes = {
     } catch (error) {
       console.error(error);
       return c.json({ error: "更新商机失败" }, 500);
+    }
+  },
+
+  updateStatus: async (c: Context) => {
+    try {
+      const id = parseInt(c.req.param("id"));
+      const { status } = await c.req.json();
+      if (!status) {
+        return c.json({ error: "缺少状态值" }, 400);
+      }
+
+      const [opportunity] = await db
+        .update(opportunities)
+        .set({ status, updatedAt: new Date() })
+        .where(eq(opportunities.id, id))
+        .returning();
+
+      if (!opportunity) {
+        return c.json({ error: "商机不存在" }, 404);
+      }
+
+      return c.json(opportunity);
+    } catch (error) {
+      console.error("更新商机状态失败:", error);
+      return c.json({ error: "更新商机状态失败" }, 500);
     }
   },
 

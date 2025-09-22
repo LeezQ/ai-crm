@@ -16,6 +16,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { VoiceNotesPanel } from '../components/voice-notes-panel';
 import { Timeline, TimelineItem } from '@/components/ui/timeline';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
@@ -29,6 +30,7 @@ export default function OpportunityDetailPage() {
   const [opportunity, setOpportunity] = useState<Opportunity | null>(null);
   const [followUpRecords, setFollowUpRecords] = useState<FollowUpRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("basic");
   const [newFollowUp, setNewFollowUp] = useState({
     type: 'call',
     content: '',
@@ -110,11 +112,12 @@ export default function OpportunityDetailPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="basic">
-            <TabsList>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="flex flex-wrap gap-2">
               <TabsTrigger value="basic">基本信息</TabsTrigger>
               <TabsTrigger value="follow-up">跟进记录</TabsTrigger>
               <TabsTrigger value="team">团队协作</TabsTrigger>
+              <TabsTrigger value="voice">语音摘要</TabsTrigger>
             </TabsList>
             <TabsContent value="basic">
               <div className="grid grid-cols-2 gap-4">
@@ -142,9 +145,29 @@ export default function OpportunityDetailPage() {
                   <Label>预计成交时间</Label>
                   <Input value={format(new Date(opportunity.expectedCloseDate), 'yyyy-MM-dd', { locale: zhCN })} readOnly />
                 </div>
+                <div className="space-y-2">
+                  <Label>下一次跟进日期</Label>
+                  <Input
+                    value={
+                      opportunity.nextFollowUpAt
+                        ? format(new Date(opportunity.nextFollowUpAt), 'yyyy-MM-dd', { locale: zhCN })
+                        : '-'
+                    }
+                    readOnly
+                  />
+                </div>
                 <div className="col-span-2 space-y-2">
                   <Label>详细描述</Label>
                   <Textarea value={opportunity.description} readOnly rows={4} />
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <Label>下一步计划</Label>
+                  <Textarea
+                    value={opportunity.nextFollowUpNote || ''}
+                    placeholder="暂无记录"
+                    readOnly
+                    rows={3}
+                  />
                 </div>
               </div>
             </TabsContent>
@@ -243,6 +266,14 @@ export default function OpportunityDetailPage() {
                   </div>
                 </div>
               </div>
+            </TabsContent>
+            <TabsContent value="voice">
+              {opportunity && (
+                <VoiceNotesPanel
+                  opportunityId={Number(opportunity.id)}
+                  isActive={activeTab === "voice"}
+                />
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>

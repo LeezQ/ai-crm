@@ -32,6 +32,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { CalendarDays, Phone, Mail, MessageSquare, Plus } from "lucide-react";
 import { getPriorityBadge, getStatusBadge, priorities, statuses } from "@/components/ui/status-badges";
+import { VoiceNotesPanel } from "./voice-notes-panel";
 
 interface OpportunityDetailDrawerProps {
   opportunity: Opportunity | null;
@@ -70,6 +71,10 @@ export default function OpportunityDetailDrawer({
         expectedCloseDate: opportunity.expectedCloseDate
           ? dayjs(opportunity.expectedCloseDate).format('YYYY-MM-DD')
           : '',
+        nextFollowUpAt: opportunity.nextFollowUpAt
+          ? dayjs(opportunity.nextFollowUpAt).format('YYYY-MM-DD')
+          : '',
+        nextFollowUpNote: opportunity.nextFollowUpNote || '',
       };
       setFormData(formInit as Partial<Opportunity>);
     }
@@ -256,9 +261,10 @@ export default function OpportunityDetailDrawer({
 
             <div className="p-4 pb-0 overflow-y-auto">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="info">基本信息</TabsTrigger>
                   <TabsTrigger value="follow-up">跟进记录</TabsTrigger>
+                  <TabsTrigger value="voice">语音摘要</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="info" className="space-y-4">
@@ -533,6 +539,15 @@ export default function OpportunityDetailDrawer({
                       )}
                     </div>
                   </div>
+                </TabsContent>
+
+                <TabsContent value="voice" className="space-y-4">
+                  {opportunity && (
+                    <VoiceNotesPanel
+                      opportunityId={opportunity.id}
+                      isActive={activeTab === "voice"}
+                    />
+                  )}
                 </TabsContent>
               </Tabs>
             </div>

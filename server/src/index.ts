@@ -30,7 +30,8 @@ app.use("*", async (c, next) => {
   }
 
   const authHeader = c.req.header("Authorization");
-  const teamId = c.req.header("Teamid") as any;
+  const teamId =
+    c.req.header("Teamid") || c.req.header("teamid") || "";
   if (!authHeader) {
     return c.json({ error: "未提供认证信息" }, 401);
   }
@@ -46,6 +47,9 @@ app.use("*", async (c, next) => {
       ...decoded,
       currentTeamId: teamId,
     });
+    if (teamId) {
+      c.set("teamId", teamId);
+    }
     await next();
   } catch (error) {
     return c.json({ error: "认证失败" }, 401);

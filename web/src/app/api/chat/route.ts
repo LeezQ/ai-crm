@@ -1,25 +1,29 @@
-import { createOpenAI, openai } from "@ai-sdk/openai";
-import { streamText } from "ai";
+const apiOrigin =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.API_SERVER_ORIGIN ||
+  "http://localhost:3001";
 
-// Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
-const customAPI = createOpenAI({
-  baseURL: process.env.OPENAI_BASE_URL || "https://api.sealos.vip/v1",
-  apiKey:
-    process.env.OPENAI_API_KEY ||
-    "sk-DtkY5AgFJeSyUE5iC0B9773c56B744299f9292Ef8984F5D9",
-});
-
-const model = customAPI("gpt-4o-mini");
-
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+  const body = await req.text();
+  const authorization = req.headers.get("authorization") ?? "";
+  const teamId = req.headers.get("teamid") ?? req.headers.get("TeamId") ?? "";
 
-  const result = streamText({
-    model: model,
-    messages,
+  const response = await fetch(`${apiOrigin.replace(/\/$/, "")}/api/ai/chat`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      authorization,
+      teamId,
+    },
+    body,
   });
 
-  return result.toDataStreamResponse();
+  const headers = new Headers(response.headers);
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 }

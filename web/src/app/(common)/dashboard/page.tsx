@@ -16,9 +16,10 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { api } from "@/lib/api";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Loader2, Sparkles } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getStatusBadge, getPriorityBadge, getStatusColor } from "@/components/ui/status-badges";
+import { Textarea } from "@/components/ui/textarea";
 
 interface DashboardData {
   totalOpportunities: number;
@@ -42,6 +43,11 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<DashboardData | null>(null);
+  const [insightQuestion, setInsightQuestion] = useState("");
+  const [insightLoading, setInsightLoading] = useState(false);
+  const [insightAnswer, setInsightAnswer] = useState<string | null>(null);
+  const [insightData, setInsightData] = useState<any>(null);
+  const [insightError, setInsightError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -60,6 +66,28 @@ export default function DashboardPage() {
 
     fetchData();
   }, []);
+
+  const handleAskInsight = async () => {
+    if (!insightQuestion.trim()) {
+      setInsightError("请输入想要查询的数据问题");
+      return;
+    }
+
+    try {
+      setInsightLoading(true);
+      setInsightError(null);
+      const response = await api.ai.insights.ask(insightQuestion.trim());
+      setInsightAnswer(response.answer);
+      setInsightData(response.data);
+    } catch (err) {
+      console.error("AI 问数失败", err);
+      setInsightAnswer(null);
+      setInsightData(null);
+      setInsightError(err instanceof Error ? err.message : "分析失败，请稍后重试");
+    } finally {
+      setInsightLoading(false);
+    }
+  };
 
   const statusChartColors = ["#4299e1", "#805ad5", "#ecc94b", "#48bb78", "#f56565"];
 
@@ -128,6 +156,59 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="bg-white border-slate-200">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" /> AI 问数
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Textarea
+            rows={3}
+            value={insightQuestion}
+            onChange={(event) => setInsightQuestion(event.target.value)}
+            placeholder="例如：上周新建了多少高优先级商机？或 当前赢单金额是多少？"
+          />
+          <div className="flex flex-wrap items-center gap-3">
+            <Button type="button" onClick={handleAskInsight} disabled={insightLoading}>
+              {insightLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              获取洞察
+            </Button>
+            {insightError && (
+              <span className="text-sm text-destructive">{insightError}</span>
+            )}
+          </div>
+          {insightAnswer && (
+            <div className="space-y-3 rounded-md border bg-slate-50 p-4">
+              <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
+                {insightAnswer}
+              </p>
+              {Array.isArray(insightData) && insightData.length > 0 && (
+                <div className="grid gap-2 md:grid-cols-2">
+                  {insightData.map((item: any, index: number) => (
+                    <div
+                      key={index}
+                      className="rounded-md border border-dashed bg-white p-3 text-sm"
+                    >
+                      <div className="text-xs text-muted-foreground">{item.status || item.label || '分类'}</div>
+                      <div className="text-base font-semibold">{item.count ?? item.value}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {insightData && typeof insightData.value === "number" && (
+                <div className="rounded-md bg-white p-3 text-center text-sm">
+                  <span className="text-muted-foreground mr-2">指标值</span>
+                  <span className="text-lg font-semibold text-primary">
+                    {insightData.value.toLocaleString()}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div>
         <h2 className="text-lg font-semibold mb-4">近期商机</h2>

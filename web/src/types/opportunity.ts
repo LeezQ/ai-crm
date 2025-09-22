@@ -21,6 +21,8 @@ export interface Opportunity {
   expectedCloseDate: string;
   createdAt: string;
   updatedAt: string;
+  nextFollowUpAt?: string | null;
+  nextFollowUpNote?: string | null;
 }
 
 export interface FollowUpRecord {
@@ -31,4 +33,22 @@ export interface FollowUpRecord {
   nextPlan: string;
   creator: string;
   createTime: string;
+}
+
+export interface VoiceNoteMeta {
+  actionItems?: string[];
+  followUps?: string[];
+  sentiment?: string;
+  note?: string;
+}
+
+export interface VoiceNote {
+  id: number;
+  filename: string;
+  mimeType: string;
+  transcript: string | null;
+  summary: string | null;
+  status: "processing" | "completed" | "failed";
+  aiMetadata?: VoiceNoteMeta | null;
+  createdAt: string;
 }

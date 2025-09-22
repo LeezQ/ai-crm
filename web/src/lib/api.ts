@@ -1,7 +1,11 @@
 "use client";
 import axios, { AxiosRequestConfig } from "axios";
 import { AuthenticationError, ServerError } from "./error";
-import { Opportunity, FollowUpRecord } from "@/types/opportunity";
+import {
+  Opportunity,
+  FollowUpRecord,
+  VoiceNote,
+} from "@/types/opportunity";
 
 interface RequestOptions extends AxiosRequestConfig {
   params?: Record<string, string>;
@@ -156,6 +160,21 @@ export const api = {
           data,
         }),
     },
+    voiceNotes: {
+      list: (id: string) =>
+        request<VoiceNote[]>(`/api/opportunities/${id}/voice-notes`),
+      upload: (id: string, file: File, note?: string) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        if (note) {
+          formData.append("note", note);
+        }
+        return request<VoiceNote>(`/api/opportunities/${id}/voice-notes`, {
+          method: "POST",
+          data: formData,
+        });
+      },
+    },
   },
 
   // 团队相关
@@ -219,6 +238,7 @@ export const api = {
           contactPerson: string;
           status: string;
           priority: string;
+          expectedAmount: string;
           createdAt: string;
         }>;
       }>("/api/dashboard"),
@@ -260,6 +280,34 @@ export const api = {
         method: "PATCH",
         data,
       });
+    },
+  },
+
+  ai: {
+    insights: {
+      ask: (question: string) =>
+        request<{
+          success: boolean;
+          intent: string;
+          filters: Record<string, unknown>;
+          data: unknown;
+          answer: string;
+        }>("/api/ai/insights", {
+          method: "POST",
+          data: { question },
+        }),
+    },
+    opportunities: {
+      assist: (input: string, autoCreate = false) =>
+        request<{
+          success: boolean;
+          structured: any;
+          autoCreated: boolean;
+          opportunity?: Opportunity;
+        }>("/api/ai/opportunities/assist", {
+          method: "POST",
+          data: { input, autoCreate },
+        }),
     },
   },
 };

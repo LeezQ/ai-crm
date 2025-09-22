@@ -12,6 +12,9 @@ import { teamRoutes } from "../controllers/team";
 import { teamMemberRoutes } from "../controllers/teamMember";
 import { streamData } from "../controllers/chat.controller";
 import { getDashboardData } from "../controllers/dashboard";
+import { voiceNoteController } from "../controllers/voice-note.controller";
+import { aiInsightController } from "../controllers/insight.controller";
+import { aiAutomationController } from "../controllers/ai-automation.controller";
 
 const app = new Hono();
 
@@ -40,14 +43,27 @@ app.post("/api/opportunities", opportunityRoutes.create);
 app.get("/api/opportunities", opportunityRoutes.list);
 app.get("/api/opportunities/:id", opportunityRoutes.getById);
 app.put("/api/opportunities/:id", opportunityRoutes.update);
+app.put("/api/opportunities/:id/status", opportunityRoutes.updateStatus);
 app.delete("/api/opportunities/:id", opportunityRoutes.delete);
 
 // 跟进相关路由
 app.get("/api/opportunities/:id/follow-ups", opportunityRoutes.getFollowUps);
 app.post("/api/opportunities/:id/follow-ups", opportunityRoutes.createFollowUp);
 
+// 语音笔记
+app.get("/api/opportunities/:id/voice-notes", voiceNoteController.list);
+app.post(
+  "/api/opportunities/:id/voice-notes",
+  voiceNoteController.upload
+);
+
 // 聊天相关路由
 app.post("/api/ai/chat", streamData);
+app.post("/api/ai/insights", aiInsightController.ask);
+app.post(
+  "/api/ai/opportunities/assist",
+  aiAutomationController.assistOpportunity
+);
 
 // Dashboard routes
 app.get("/api/dashboard", getDashboardData);

@@ -8,6 +8,7 @@ import {
   boolean,
   uniqueIndex,
   jsonb,
+  numeric,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
@@ -44,7 +45,12 @@ export const opportunities = pgTable("opportunities", {
   priority: varchar("priority", { length: 50 }).notNull().default("normal"),
   description: text("description"),
   source: varchar("source", { length: 50 }),
+  expectedAmount: numeric("expected_amount", { precision: 12, scale: 2 })
+    .notNull()
+    .default("0"),
   expectedCloseDate: timestamp("expected_close_date"),
+  nextFollowUpAt: timestamp("next_follow_up_at"),
+  nextFollowUpNote: text("next_follow_up_note"),
   ownerId: integer("owner_id")
     .notNull()
     .references(() => users.id),
@@ -65,6 +71,27 @@ export const followUps = pgTable("follow_ups", {
   creatorId: integer("creator_id")
     .notNull()
     .references(() => users.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const voiceNotes = pgTable("voice_notes", {
+  id: serial("id").primaryKey(),
+  opportunityId: integer("opportunity_id")
+    .notNull()
+    .references(() => opportunities.id, { onDelete: "cascade" }),
+  teamId: integer("team_id").references(() => teams.id, { onDelete: "set null" }),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "set null" }),
+  filename: varchar("filename", { length: 255 }).notNull(),
+  filePath: varchar("file_path", { length: 500 }).notNull(),
+  mimeType: varchar("mime_type", { length: 100 }).notNull(),
+  durationSeconds: integer("duration_seconds"),
+  transcript: text("transcript"),
+  summary: text("summary"),
+  status: varchar("status", { length: 50 }).notNull().default("processing"),
+  aiMetadata: jsonb("ai_metadata"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

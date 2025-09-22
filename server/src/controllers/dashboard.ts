@@ -41,6 +41,7 @@ export async function getDashboardData(c: Context) {
         contactPerson: opportunities.contactPerson,
         status: opportunities.status,
         priority: opportunities.priority,
+        expectedAmount: opportunities.expectedAmount,
         createdAt: opportunities.createdAt,
       })
       .from(opportunities)
